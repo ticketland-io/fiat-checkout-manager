@@ -23,7 +23,8 @@ fn main() {
     dotenv::from_filename(".env").expect("cannot load env from a file");
   }
 
-
+  tracing_subscriber::fmt::init();
+  
   let system = System::new();
 
   let execution = async {
