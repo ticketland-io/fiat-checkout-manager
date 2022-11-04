@@ -26,7 +26,7 @@ impl CreateCheckoutHandler {
 #[async_trait]
 impl Handler<CreateCheckout> for CreateCheckoutHandler {
   async fn handle(&self, msg: CreateCheckout, _: &Delivery) -> Result<()> {
-    info!("Assigning roles to {} in guild {}", &msg.discord_uid, &msg.guild_id);
+    info!("Creating new checkout for user {} and ticket {} from event {}", msg.buyer_uid, msg.ticket_nft, msg.event_id);
 
     Ok(())
   }
