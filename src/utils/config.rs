@@ -9,6 +9,7 @@ pub struct Config {
   pub neo4j_password: String,
   pub neo4j_database: Option<String>,
   pub rabbitmq_uri: String,
+  pub retry_ttl: u16,
   pub redis_host: String,
   pub redis_password: String,
   pub rpc_endpoint: String,
@@ -43,6 +44,7 @@ impl Config {
         ticket_nft_state: pubkey_from_str(&env::var("TICKET_NFT_STATE").unwrap()).unwrap(),
         secondary_market_protocol_fee: env::var("SECONDARY_MARKET_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
         operator_priv_key: env::var("OPERATOR_PRIV_KEY").unwrap(),
+        retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),
       }
     )
   }

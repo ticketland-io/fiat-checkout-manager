@@ -32,8 +32,8 @@ fn main() {
 
     let mut role_handler_consumer = ConsumerRunner::new(
       store.config.rabbitmq_uri.clone(),
-      "checkout_session".to_owned(),
-      "checkout_session".to_owned(),
+      "create_checkout_session".to_owned(),
+      "create_checkout_session".to_owned(),
       Arc::new(CreateCheckoutHandler::new(store).await),
     ).await;
 

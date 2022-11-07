@@ -34,7 +34,10 @@ use program_artifacts::{
   },
 };
 use crate::{
-  models::create_checkout::CreateCheckout,
+  models::{
+    create_checkout::CreateCheckout,
+    checkout_session::CheckoutSession,
+  },
   utils::store::Store,
   services::stripe::{create_primary_sale_checkout, create_secondary_sale_checkout},
 };
@@ -231,9 +234,9 @@ impl CreateCheckoutHandler {
 #[async_trait]
 impl Handler<CreateCheckout> for CreateCheckoutHandler {
   async fn handle(&self, msg: CreateCheckout, _: &Delivery) -> Result<()> {
-    match msg {
+    let (ws_session_id, checkout_session_id) = match msg {
       CreateCheckout::Primary {..} => {
-        let (_, buyer_uid, _, event_id, ticket_nft, _, _, seat_index, seat_name) = msg.primary();
+        let (ws_session_id, buyer_uid, _, event_id, ticket_nft, _, _, seat_index, seat_name) = msg.primary();
         info!("Creating new checkout for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
 
         with_retry(None, None, || self.reserve_seat(&msg)).await
@@ -241,11 +244,13 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
           println!("Failed to reserve seat {:?}:{:?} for event {}: {:?}", seat_index, seat_name, event_id, error);
           error
         })?;
+        
+        let checkout_session_id = self.create_primary_checkout_session(&msg).await?;
 
-        self.create_primary_checkout_session(&msg).await?
+        (ws_session_id, checkout_session_id)
       },
       CreateCheckout::Secondary {..} => {
-        let (_, buyer_uid, _, event_id, ticket_nft, _, _) = msg.secondary();
+        let (ws_session_id, buyer_uid, _, event_id, ticket_nft, _, _) = msg.secondary();
         info!("Creating new secondary checkout for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
         
         with_retry(None, None, || self.reserve_sell_listing(&msg)).await
@@ -254,11 +259,17 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
           error
         })?;
         
-        self.create_secondary_sale_checkout(&msg).await?
+        let checkout_session_id = self.create_secondary_sale_checkout(&msg).await?;
+
+        (ws_session_id, checkout_session_id)
       }
     };
     
-    // TODO: send checkout_session_id in a message to RabbitMQ
+    self.store.checkout_session_producer.new_checkout_session(CheckoutSession {
+      ws_session_id: ws_session_id.to_string(),
+      checkout_session_id,
+    }).await?;
+
     Ok(())
   }
 }
