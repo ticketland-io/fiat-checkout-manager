@@ -36,7 +36,7 @@ use program_artifacts::{
 use crate::{
   models::create_checkout::CreateCheckout,
   utils::store::Store,
-  services::stripe::{create_primary_sale_checkout},
+  services::stripe::{create_primary_sale_checkout, create_secondary_sale_checkout},
 };
 
 // TODO: find the number to Slots that correspond to 30 mints which is the Stripe Checkout duration.
@@ -156,7 +156,7 @@ impl CreateCheckoutHandler {
   }
 
   async fn create_primary_checkout_session(&self, msg: &CreateCheckout) -> Result<String> {
-    let (ws_session_id, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient, seat_index, seat_name) = msg.primary();
+    let (_, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient, seat_index, seat_name) = msg.primary();
 
     Ok(
       create_primary_sale_checkout(
@@ -169,6 +169,22 @@ impl CreateCheckoutHandler {
         recipient.to_string(),
         seat_index,
         seat_name.to_string(),
+      ).await?
+    )
+  }
+
+  async fn create_secondary_sale_checkout(&self, msg: &CreateCheckout) -> Result<String> {
+    let (_, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient) = msg.secondary();
+
+    Ok(
+      create_secondary_sale_checkout(
+        Arc::clone(&self.store),
+        buyer_uid.to_string(),
+        sale_account.to_string(),
+        event_id.to_string(),
+        ticket_nft.to_string(),
+        ticket_type_index,
+        recipient.to_string(),
       ).await?
     )
   }
@@ -188,14 +204,13 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
           error
         })?;
 
-        let _checkout_session_id = self.create_primary_checkout_session(&msg).await?;
+        self.create_primary_checkout_session(&msg).await?
       },
-      CreateCheckout::Secondary {ws_session_id, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient} => {
-        
+      CreateCheckout::Secondary {..} => {
+        self.create_secondary_sale_checkout(&msg).await?
       }
     };
     
-
     // TODO: send checkout_session_id in a message to RabbitMQ
     Ok(())
   }
