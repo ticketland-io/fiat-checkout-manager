@@ -20,7 +20,10 @@ use ticketland_core::async_helpers::with_retry;
 use solana_web3_rust::utils::pubkey_from_str;
 use program_artifacts::{
   ix::InstructionData,
-  ticket_sale,
+  ticket_sale::{
+    self,
+    account_data::SeatReservation
+  },
 };
 use crate::{
   models::create_checkout::CreateCheckout,
@@ -40,6 +43,29 @@ impl CreateCheckoutHandler {
   }
 
   async fn reserve_seat(&self, msg: &CreateCheckout) -> Result<()> {
+    let sale = Pubkey::from_str(&msg.sale_account)?;
+    let seat_reservation = ticket_sale::pda::seat_reservation(&sale, msg.seat_index, &msg.seat_name).0;
+    // Fails if the account does not exist
+    let result = self.store.rpc_client.get_anchor_account_data::<SeatReservation>(&seat_reservation).await;
+
+    if result.is_err() {
+      return self.send_reserve_seat_tx(msg).await
+    }
+
+    let seat_reservation = result?;
+    let latest_slot = self.store.rpc_client.get_slot().await?;
+
+    // Ignore if it has expired. Note id recipient is the same recipient as the one we're processing this message for
+    // we should still send the reserve seat as this might be a new request for a checkout link so we need to 
+    // upadte the duration of the reservation which will happen in the reserve_seat Ix.
+    if latest_slot > seat_reservation.valid_until {
+      return Ok(())
+    }
+
+    self.send_reserve_seat_tx(msg).await
+  }
+
+  async fn send_reserve_seat_tx(&self, msg: &CreateCheckout) -> Result<()> {
     let state = self.store.config.ticket_sale_state;
     let sale = Pubkey::from_str(&msg.sale_account)?;
     let seat_reservation = ticket_sale::pda::seat_reservation(&sale, msg.seat_index, &msg.seat_name).0;

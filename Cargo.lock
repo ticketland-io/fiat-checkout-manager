@@ -5089,8 +5089,8 @@ dependencies = [
 
 [[package]]
 name = "solana-web3-rust"
-version = "0.1.9"
-source = "git+https://github.com/ticketland-io/solana-web3-rust#c64d29c0f4543f4b1624d6169b693ffc144959a1"
+version = "0.1.10"
+source = "git+https://github.com/ticketland-io/solana-web3-rust#e9cae9cf279a4bb67725a47138020b76c5b881a5"
 dependencies = [
  "borsh",
  "eyre",
