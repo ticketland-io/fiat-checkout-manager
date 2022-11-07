@@ -1241,8 +1241,8 @@ dependencies = [
 
 [[package]]
 name = "common-data"
-version = "0.3.36"
-source = "git+https://github.com/ticketland-io/common-rust#aa6d062e2b413e596e2d1b5d5e4f3f7220d36af3"
+version = "0.3.37"
+source = "git+https://github.com/ticketland-io/common-rust#eec5ecc0cdb097ec6650f818375a97fffd6524a0"
 dependencies = [
  "actix",
  "bolt-client",
@@ -1894,6 +1894,7 @@ dependencies = [
  "serde",
  "solana-client",
  "solana-sdk",
+ "solana-web3-rust",
  "ticketland-core",
  "ticketland-event-handler",
  "tracing",
@@ -5381,7 +5382,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.2.13"
-source = "git+https://github.com/ticketland-io/common-rust#aa6d062e2b413e596e2d1b5d5e4f3f7220d36af3"
+source = "git+https://github.com/ticketland-io/common-rust#eec5ecc0cdb097ec6650f818375a97fffd6524a0"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5411,8 +5412,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.10"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#151f074d20b9e729f8eee70719c0ed3a395f63b1"
+version = "0.1.11"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#10ba7d7b15a61815aefc59e6c8ad66a6b0c56248"
 dependencies = [
  "actix",
  "actix-rt",
