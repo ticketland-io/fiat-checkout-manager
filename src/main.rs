@@ -8,7 +8,7 @@ use actix::prelude::*;
 use amqp_helpers::consumer::consumer_runner::ConsumerRunner;
 use fiat_checkout_manager::{
   utils::store::Store,
-  queue_consumers::create_checkout::CreateCheckoutHandler,
+  queue::create_checkout_consumer::CreateCheckoutHandler,
 };
 
 
