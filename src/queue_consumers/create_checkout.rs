@@ -16,6 +16,7 @@ use solana_sdk::{
   rent::Rent,
   sysvar::SysvarId,
 };
+use ticketland_core::async_helpers::with_retry;
 use solana_web3_rust::utils::pubkey_from_str;
 use program_artifacts::{
   ix::InstructionData,
@@ -73,10 +74,6 @@ impl CreateCheckoutHandler {
     self.store.rpc_client.send_tx(ix)
     .await
     .map(|tx_hash| println!("Reserved seat {}:{} for event {}: {:?}", msg.seat_index, &msg.seat_name, &msg.event_id, tx_hash))
-    .map_err(|error| {
-      println!("Failed to reserve seat  {}:{} for event {}: {:?}", msg.seat_index, &msg.seat_name, &msg.event_id, error);
-      error
-    })
   }
 
   async fn create_checkout_session(&self, msg: &CreateCheckout) -> Result<String> {
@@ -101,9 +98,15 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
   async fn handle(&self, msg: CreateCheckout, _: &Delivery) -> Result<()> {
     info!("Creating new checkout for user {} and ticket {} from event {}", msg.buyer_uid, msg.ticket_nft, msg.event_id);
     
-    self.reserve_seat(&msg).await?;
+    with_retry(None, None, || self.reserve_seat(&msg)).await
+    .map_err(|error| {
+      println!("Failed to reserve seat  {}:{} for event {}: {:?}", msg.seat_index, &msg.seat_name, &msg.event_id, error);
+      error
+    })?;
+
     let _checkout_session_id = self.create_checkout_session(&msg).await?;
 
+    // TODO: send checkout_session_id in a message to RabbitMQ
     Ok(())
   }
 }
