@@ -120,17 +120,55 @@ impl CreateCheckoutHandler {
     Ok(())
   }
 
-  async fn send_reserve_sell_listing_tx(&self, msg: &CreateCheckout) -> Result<()> {
+  async fn reserve_sell_listing(&self, msg: &CreateCheckout) -> Result<()> {
     let (_, _, _, event_id, ticket_nft, _, recipient) = msg.secondary();
     let state = self.store.config.secondary_market_state;
     let ticket_matadata = ticket_nft::pda::ticket_metadata(&self.store.config.ticket_nft_state, &ticket_nft).0;
     let sell_listing = secondary_market::pda::sell_listing(&state, &event_id, &ticket_matadata,).0;
-    let sell_listing_reservation = secondary_market::pda::sell_listing_reservation(&sell_listing).0;
+    let sell_listing_reservation_account = secondary_market::pda::sell_listing_reservation(&sell_listing).0;
+    let result = self.store.rpc_client.get_anchor_account_data::<SellListingReservation>(&sell_listing_reservation_account).await;
+    
+    // Fails if the account does not exist
+    if result.is_err() {
+      return self.send_reserve_sell_listing_tx(
+        event_id.to_string(),
+        sell_listing,
+        sell_listing_reservation_account,
+        recipient.to_string()
+      ).await
+    }
+
+    let sell_listing_reservation = result?;
+    let latest_slot = self.store.rpc_client.get_slot().await?;
+
+    // Ignore if it has expired. Note id recipient is the same recipient as the one we're processing this message for
+    // we should still send the reserve seat as this might be a new request for a checkout link so we need to 
+    // upadte the duration of the reservation which will happen in the reserve_seat Ix.
+    if latest_slot > sell_listing_reservation.valid_until {
+      return Ok(())
+    }
+
+    self.send_reserve_sell_listing_tx(
+      event_id.to_string(),
+      sell_listing,
+      sell_listing_reservation_account,
+      recipient.to_string()
+    ).await
+    .map(|tx_hash| println!("Reserved fill listing for ticket_nft {} for event {}: {:?}", ticket_nft, &event_id, tx_hash))
+  }
+
+  async fn send_reserve_sell_listing_tx(
+    &self,
+    event_id: String,
+    sell_listing: Pubkey,
+    sell_listing_reservation: Pubkey,
+    recipient: String,
+  ) -> Result<()> {
+    let state = self.store.config.secondary_market_state;
     let operator = self.store.rpc_client.payer_key().context("invalid priv key")?;
 
     let accounts = vec![
       AccountMeta::new_readonly(state, false),
-      AccountMeta::new(sell_listing_reservation, false),
       AccountMeta::new(sell_listing_reservation, false),
       AccountMeta::new(operator, true),
       AccountMeta::new_readonly(system_program::ID, false),
@@ -207,6 +245,15 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
         self.create_primary_checkout_session(&msg).await?
       },
       CreateCheckout::Secondary {..} => {
+        let (_, buyer_uid, _, event_id, ticket_nft, _, _) = msg.secondary();
+        info!("Creating new secondary checkout for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
+        
+        with_retry(None, None, || self.reserve_sell_listing(&msg)).await
+        .map_err(|error| {
+          println!("Failed to reserve sell listing for ticket_nft {} and event {}: {:?}",  ticket_nft, event_id, error);
+          error
+        })?;
+        
         self.create_secondary_sale_checkout(&msg).await?
       }
     };
