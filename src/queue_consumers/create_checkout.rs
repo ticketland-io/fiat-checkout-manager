@@ -23,15 +23,20 @@ use program_artifacts::{
   ix::InstructionData,
   ticket_sale::{
     self,
+    instruction::ReserveSeatIx,
     account_data::SeatReservation
   },
+  secondary_market::{
+    self,
+    instruction::ReserveSellListingIx,
+    account_data::SellListingReservation,
+  }
 };
 use crate::{
   models::create_checkout::CreateCheckout,
   utils::store::Store,
   services::stripe::{create_primary_sale_checkout},
 };
-
 
 // TODO: find the number to Slots that correspond to 30 mints which is the Stripe Checkout duration.
 // We can potentially utilize an external service that will give us the average slot for the last day.
@@ -79,8 +84,8 @@ impl CreateCheckoutHandler {
     let operator = self.store.rpc_client.payer_key().context("invalid priv key")?;
 
     let accounts = vec![
-      AccountMeta::new(state, false),
-      AccountMeta::new(sale, false),
+      AccountMeta::new_readonly(state, false),
+      AccountMeta::new_readonly(sale, false),
       AccountMeta::new(seat_reservation, false),
       AccountMeta::new(operator, true),
       AccountMeta::new_readonly(system_program::ID, false),
@@ -88,7 +93,7 @@ impl CreateCheckoutHandler {
     ];
 
     let duration = (Duration::minutes(30).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
-    let data = ticket_sale::instruction::ReserveSeat {
+    let data = ReserveSeatIx {
       seat_index: msg.seat_index,
       seat_name: msg.seat_name.clone(),
       duration,
@@ -104,6 +109,39 @@ impl CreateCheckoutHandler {
     self.store.rpc_client.send_tx(ix)
     .await
     .map(|tx_hash| println!("Reserved seat {}:{} for event {}: {:?}", msg.seat_index, &msg.seat_name, &msg.event_id, tx_hash))
+  }
+
+  async fn send_reserve_sell_listing(&self, msg: &CreateCheckout) -> Result<()> {
+    let state = self.store.config.secondary_market_state;
+    let sell_listing = Pubkey::from_str(&msg.sell_listing)?;
+    let sell_listing_reservation = secondary_market::pda::sell_listing_reservation(&sell_listing).0;
+    let operator = self.store.rpc_client.payer_key().context("invalid priv key")?;
+
+    let accounts = vec![
+      AccountMeta::new_readonly(state, false),
+      AccountMeta::new(sell_listing_reservation, false),
+      AccountMeta::new(sell_listing_reservation, false),
+      AccountMeta::new(operator, true),
+      AccountMeta::new_readonly(system_program::ID, false),
+      AccountMeta::new_readonly(Rent::id(), false),
+    ];
+
+    let duration = (Duration::minutes(30).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
+    let data = ReserveSellListingIx {
+      sell_listing: msg.sell_listing,
+      duration,
+      recipient: pubkey_from_str(&msg.recipient)?,
+    }.data();
+    
+    let ix = Instruction {
+      program_id: secondary_market::program_id(),
+      accounts,
+      data,
+    };
+
+    self.store.rpc_client.send_tx(ix)
+    .await
+    .map(|tx_hash| println!("Reserved sell listing {} for event {}: {:?}", &msg.sell_listing, &msg.event_id, tx_hash))
   }
 
   async fn create_checkout_session(&self, msg: &CreateCheckout) -> Result<String> {

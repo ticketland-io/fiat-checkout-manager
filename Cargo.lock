@@ -3568,8 +3568,8 @@ dependencies = [
 
 [[package]]
 name = "program-artifacts"
-version = "0.1.25"
-source = "git+https://github.com/ticketland-io/program-artifacts#0d33c5fc6bc6f4ed3235972d741959a45839a378"
+version = "0.1.27"
+source = "git+https://github.com/ticketland-io/program-artifacts#f900ec4ca161758f000f97c1e46fa6d8ad87ee08"
 dependencies = [
  "borsh",
  "eyre",
