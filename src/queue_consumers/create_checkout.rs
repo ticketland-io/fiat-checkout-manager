@@ -56,20 +56,15 @@ impl CreateCheckoutHandler {
   }
 
   async fn reserve_seat(&self, msg: &CreateCheckout) -> Result<()> {
-    // ignore if the message is incorrect. These two values MUST be Some
-    if msg.seat_index.is_none() || msg.seat_name.is_none() {
-      return Ok(())
-    }
-
-    let seat_index = msg.seat_index.unwrap();
-    let seat_name = msg.seat_name.clone().unwrap();
-    let sale = Pubkey::from_str(&msg.sale_account)?;
-    let seat_reservation_account = ticket_sale::pda::seat_reservation(&sale, seat_index, &seat_name).0;
+    let (_, _, sale_account, event_id, _, _, recipient, seat_index, seat_name) = msg.primary();
+    
+    let sale = Pubkey::from_str(&sale_account)?;
+    let seat_reservation_account = ticket_sale::pda::seat_reservation(&sale, seat_index, &seat_name.to_string()).0;
     let result = self.store.rpc_client.get_anchor_account_data::<SeatReservation>(&seat_reservation_account).await;
     
     // Fails if the account does not exist
     if result.is_err() {
-      return self.send_reserve_seat_tx(msg, sale, seat_reservation_account).await
+      return self.send_reserve_seat_tx(sale, seat_reservation_account, seat_index, seat_name.to_string(), recipient.to_string()).await
     }
 
     let seat_reservation = result?;
@@ -82,11 +77,18 @@ impl CreateCheckoutHandler {
       return Ok(())
     }
 
-    self.send_reserve_seat_tx(msg, sale, seat_reservation_account).await
-    .map(|tx_hash| println!("Reserved seat {}:{} for event {}: {:?}", seat_index, &seat_name, &msg.event_id, tx_hash))
+    self.send_reserve_seat_tx(sale, seat_reservation_account, seat_index, seat_name.to_string(), recipient.to_string()).await
+    .map(|tx_hash| println!("Reserved seat {}:{} for event {}: {:?}", seat_index, &seat_name, &event_id, tx_hash))
   }
 
-  async fn send_reserve_seat_tx(&self, msg: &CreateCheckout, sale: Pubkey, seat_reservation: Pubkey, ) -> Result<()> {
+  async fn send_reserve_seat_tx(
+    &self,
+    sale: Pubkey,
+    seat_reservation: Pubkey,
+    seat_index: u32,
+    seat_name: String,
+    recipient: String,
+  ) -> Result<()> {
     let state = self.store.config.ticket_sale_state;
     let operator = self.store.rpc_client.payer_key().context("invalid priv key")?;
 
@@ -99,14 +101,12 @@ impl CreateCheckoutHandler {
       AccountMeta::new_readonly(Rent::id(), false),
     ];
 
-    let seat_index = msg.seat_index.unwrap();
-    let seat_name = msg.seat_name.clone().unwrap();
     let duration = (Duration::minutes(30).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
     let data = ReserveSeatIx {
       seat_index,
       seat_name,
       duration,
-      recipient: pubkey_from_str(&msg.recipient)?,
+      recipient: pubkey_from_str(&recipient)?,
     }.data();
     
     let ix = Instruction {
@@ -120,10 +120,11 @@ impl CreateCheckoutHandler {
     Ok(())
   }
 
-  async fn send_reserve_sell_listing(&self, msg: &CreateCheckout) -> Result<()> {
+  async fn send_reserve_sell_listing_tx(&self, msg: &CreateCheckout) -> Result<()> {
+    let (_, _, _, event_id, ticket_nft, _, recipient) = msg.secondary();
     let state = self.store.config.secondary_market_state;
-    let ticket_matadata = ticket_nft::pda::ticket_metadata(&self.store.config.ticket_nft_state, &msg.ticket_nft).0;
-    let sell_listing = secondary_market::pda::sell_listing(&state, &msg.event_id, &ticket_matadata,).0;
+    let ticket_matadata = ticket_nft::pda::ticket_metadata(&self.store.config.ticket_nft_state, &ticket_nft).0;
+    let sell_listing = secondary_market::pda::sell_listing(&state, &event_id, &ticket_matadata,).0;
     let sell_listing_reservation = secondary_market::pda::sell_listing_reservation(&sell_listing).0;
     let operator = self.store.rpc_client.payer_key().context("invalid priv key")?;
 
@@ -140,7 +141,7 @@ impl CreateCheckoutHandler {
     let data = ReserveSellListingIx {
       sell_listing,
       duration,
-      recipient: pubkey_from_str(&msg.recipient)?,
+      recipient: pubkey_from_str(&recipient)?,
     }.data();
     
     let ix = Instruction {
@@ -151,21 +152,23 @@ impl CreateCheckoutHandler {
 
     self.store.rpc_client.send_tx(ix)
     .await
-    .map(|tx_hash| println!("Reserved sell listing {} for event {}: {:?}", &sell_listing, &msg.event_id, tx_hash))
+    .map(|tx_hash| println!("Reserved sell listing {} for event {}: {:?}", &sell_listing, &event_id, tx_hash))
   }
 
-  async fn create_checkout_session(&self, msg: &CreateCheckout) -> Result<String> {
+  async fn create_primary_checkout_session(&self, msg: &CreateCheckout) -> Result<String> {
+    let (ws_session_id, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient, seat_index, seat_name) = msg.primary();
+
     Ok(
       create_primary_sale_checkout(
         Arc::clone(&self.store),
-        msg.buyer_uid.clone(),
-        msg.sale_account.clone(),
-        msg.event_id.clone(),
-        msg.ticket_nft.clone(),
-        msg.ticket_type_index,
-        msg.recipient.clone(),
-        msg.seat_index.unwrap(),
-        msg.seat_name.clone().unwrap(),
+        buyer_uid.to_string(),
+        sale_account.to_string(),
+        event_id.to_string(),
+        ticket_nft.to_string(),
+        ticket_type_index,
+        recipient.to_string(),
+        seat_index,
+        seat_name.to_string(),
       ).await?
     )
   }
@@ -175,22 +178,23 @@ impl CreateCheckoutHandler {
 impl Handler<CreateCheckout> for CreateCheckoutHandler {
   async fn handle(&self, msg: CreateCheckout, _: &Delivery) -> Result<()> {
     match msg {
-      CreateCheckout::Primary {ws_session_id, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient} => {
-        
+      CreateCheckout::Primary {..} => {
+        let (_, buyer_uid, _, event_id, ticket_nft, _, _, seat_index, seat_name) = msg.primary();
+        info!("Creating new checkout for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
+
+        with_retry(None, None, || self.reserve_seat(&msg)).await
+        .map_err(|error| {
+          println!("Failed to reserve seat {:?}:{:?} for event {}: {:?}", seat_index, seat_name, event_id, error);
+          error
+        })?;
+
+        let _checkout_session_id = self.create_primary_checkout_session(&msg).await?;
       },
       CreateCheckout::Secondary {ws_session_id, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient} => {
         
       }
-    }
-    info!("Creating new checkout for user {} and ticket {} from event {}", msg.buyer_uid, msg.ticket_nft, msg.event_id);
+    };
     
-    with_retry(None, None, || self.reserve_seat(&msg)).await
-    .map_err(|error| {
-      println!("Failed to reserve seat  {:?}:{:?} for event {}: {:?}", msg.seat_index, &msg.seat_name, &msg.event_id, error);
-      error
-    })?;
-
-    let _checkout_session_id = self.create_checkout_session(&msg).await?;
 
     // TODO: send checkout_session_id in a message to RabbitMQ
     Ok(())

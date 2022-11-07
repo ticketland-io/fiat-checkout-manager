@@ -1,4 +1,4 @@
-use borsh,
+use borsh::{BorshSerialize, BorshDeserialize};
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
 pub enum CreateCheckout {
@@ -25,7 +25,7 @@ pub enum CreateCheckout {
 }
 
 impl CreateCheckout {
-  fn primary(self) -> (String, String, String, String, String, u8, String, u32, String) {
+  pub fn primary(&self) -> (&str, &str, &str, &str, &str, u8, &str, u32, &str) {
     match self {
       CreateCheckout::Primary {
         ws_session_id,
@@ -37,12 +37,22 @@ impl CreateCheckout {
         recipient,
         seat_index,
         seat_name,
-      } => (ws_session_id, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient, seat_index, seat_name),
+      } => (
+        ws_session_id,
+        buyer_uid,
+        sale_account,
+        event_id,
+        ticket_nft,
+        *ticket_type_index,
+        recipient,
+        *seat_index,
+        seat_name
+      ),
       _ => panic!("should never call primary")
     }
   }
 
-  fn secondary(self) -> (String, String, String, String, String, u8, String) {
+  pub fn secondary(&self) -> (&str, &str, &str, &str, &str, u8, &str) {
     match self {
       CreateCheckout::Secondary {
         ws_session_id,
@@ -52,7 +62,7 @@ impl CreateCheckout {
         ticket_nft,
         ticket_type_index,
         recipient,
-      } => (ws_session_id, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient),
+      } => (ws_session_id, buyer_uid, sale_account, event_id, ticket_nft, *ticket_type_index, recipient),
       _ => panic!("should never call primary")
     }
   }
