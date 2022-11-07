@@ -4,6 +4,7 @@ use std::{
 };
 use eyre::{Result, ContextCompat};
 use tracing::info;
+use chrono::Duration;
 use amqp_helpers::core::types::Handler;
 use async_trait::async_trait;
 use lapin::{
@@ -30,6 +31,12 @@ use crate::{
   utils::store::Store,
   services::stripe::{create_primary_sale_checkout},
 };
+
+
+// TODO: find the number to Slots that correspond to 30 mints which is the Stripe Checkout duration.
+// We can potentially utilize an external service that will give us the average slot for the last day.
+// The Solana target slot time is 400ms but we give 50% margin to that ideal value.
+const SOLANA_SLOT_TIME: i64 = 600; // 600 ms
 
 pub struct CreateCheckoutHandler {
   store: Arc<Store>
@@ -80,10 +87,7 @@ impl CreateCheckoutHandler {
       AccountMeta::new_readonly(Rent::id(), false),
     ];
 
-    // TODO: find the number to Slots that correspond to 30 mints which is the Stripe Checkout duration.
-    // We can potentially utilize an external service that will give us the average slot for the last day
-    let duration = 10;
-
+    let duration = (Duration::minutes(30).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
     let data = ticket_sale::instruction::ReserveSeat {
       seat_index: msg.seat_index,
       seat_name: msg.seat_name.clone(),
