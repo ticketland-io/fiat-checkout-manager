@@ -36,7 +36,7 @@ impl Store {
 
     let redis = Arc::new(Mutex::new(Redis::new(&config.redis_host, &config.redis_password).await.unwrap()));
     let redlock = Arc::new(RedLock::new(vec![&config.redis_host], &config.redis_password));
-    let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone(), None));
+    let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone(), Some(config.operator_priv_key.clone())));
 
     Self {
       config,

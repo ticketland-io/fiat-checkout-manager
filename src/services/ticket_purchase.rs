@@ -104,14 +104,14 @@ impl PrePurchaseChecksParams {
 
 pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Result<(i64, i64)> {
   let (store, event_id, seat_index, sale_account, ticket_nft) = params.primary();
-  let ticket_nft_program_state = &store.config.ticket_nft_program_state;
+  let ticket_nft_state = &store.config.ticket_nft_state;
   let (query, db_query_params) = read_event_sale(sale_account.to_string());
   let sale: Sale = send_read(Arc::clone(&store.neo4j), query, db_query_params)
   .await
   .map(TryInto::<Sale>::try_into)??;
 
   let (ticket_nft_pda, _) = pda::ticket_nft(
-    ticket_nft_program_state,
+    ticket_nft_state,
     seat_index,
     &event_id,
     sale.ticket_type_index,

@@ -14,10 +14,12 @@ pub struct Config {
   pub rpc_endpoint: String,
   pub ticketland_dapp: String,
   pub stripe_key: String,
-  pub ticket_nft_program_state: Pubkey,
+  pub ticket_sale_state: Pubkey,
+  pub ticket_nft_state: Pubkey,
   pub secondary_market_state: Pubkey,
   pub ticket_purchase_protocol_fee: i64,
   pub secondary_market_protocol_fee: i64,
+  pub operator_priv_key: String,
 }
 
 impl Config {
@@ -35,10 +37,12 @@ impl Config {
         rpc_endpoint: env::var("RPC_ENDPOINT").unwrap(),
         ticketland_dapp: env::var("TICKETLAND_DAPP").unwrap(),
         stripe_key: env::var("STRIPE_CLIENT_SECRET").unwrap(),
-        ticket_nft_program_state: pubkey_from_str(&env::var("TICKET_NFT_STATE").unwrap()).unwrap(),
+        ticket_sale_state: pubkey_from_str(&env::var("TICKET_SALE_STATE").unwrap()).unwrap(),
         secondary_market_state: pubkey_from_str(&env::var("SECONDARY_PROGRAM_STATE").unwrap()).unwrap(),
         ticket_purchase_protocol_fee: env::var("TICKET_PURCHASE_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
+        ticket_nft_state: pubkey_from_str(&env::var("TICKET_NFT_STATE").unwrap()).unwrap(),
         secondary_market_protocol_fee: env::var("SECONDARY_MARKET_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
+        operator_priv_key: env::var("OPERATOR_PRIV_KEY").unwrap(),
       }
     )
   }
