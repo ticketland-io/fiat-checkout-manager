@@ -174,6 +174,14 @@ impl CreateCheckoutHandler {
 #[async_trait]
 impl Handler<CreateCheckout> for CreateCheckoutHandler {
   async fn handle(&self, msg: CreateCheckout, _: &Delivery) -> Result<()> {
+    match msg {
+      CreateCheckout::Primary {ws_session_id, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient} => {
+        
+      },
+      CreateCheckout::Secondary {ws_session_id, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient} => {
+        
+      }
+    }
     info!("Creating new checkout for user {} and ticket {} from event {}", msg.buyer_uid, msg.ticket_nft, msg.event_id);
     
     with_retry(None, None, || self.reserve_seat(&msg)).await
