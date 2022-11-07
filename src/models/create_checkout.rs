@@ -9,6 +9,7 @@ pub struct CreateCheckout {
   pub ticket_nft: String,
   pub ticket_type_index: u8,
   pub recipient: String,
-  pub seat_index: u32,
-  pub seat_name: String,
+  // These two are used in the primary sale checkout not the fill sell listing checkout
+  pub seat_index: Option<u32>,
+  pub seat_name: Option<String>,
 }
