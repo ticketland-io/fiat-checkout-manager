@@ -1,4 +1,5 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use actix::prelude::*;
 use ticketland_core::{
   actor::neo4j::Neo4jActor,

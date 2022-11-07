@@ -1897,6 +1897,7 @@ dependencies = [
  "solana-web3-rust",
  "ticketland-core",
  "ticketland-event-handler",
+ "tokio",
  "tracing",
  "tracing-subscriber",
 ]
