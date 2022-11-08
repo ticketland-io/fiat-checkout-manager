@@ -36,7 +36,7 @@ use program_artifacts::{
 use crate::{
   models::{
     create_checkout::CreateCheckout,
-    checkout_session::{CheckoutSession, CheckoutSessionResult},
+    checkout_session::{CheckoutSession, CheckoutSessionId},
   },
   utils::store::Store,
   services::stripe::{create_primary_sale_checkout, create_secondary_sale_checkout},
@@ -261,12 +261,12 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
         })?;
         
         match self.create_primary_checkout_session(&msg).await {
-          Ok(checkout_session_id) => Ok((ws_session_id, CheckoutSessionResult::Ok(checkout_session_id))),
+          Ok(checkout_session_id) => Ok((ws_session_id, CheckoutSessionId::Ok(checkout_session_id))),
           Err(error) => {
             // we don't want to nack if the ticket is unavailable. Instead we need to ack and
             // push CheckoutSession message including the error
             if error.to_string() == "Ticket unavailable" {
-              Ok((ws_session_id, CheckoutSessionResult::Err(error.to_string())))
+              Ok((ws_session_id, CheckoutSessionId::Err(error.to_string())))
             } else {
               Err(error)
             }
@@ -284,10 +284,10 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
         })?;
       
         match self.create_secondary_sale_checkout(&msg).await {
-          Ok(checkout_session_id) => Ok((ws_session_id, CheckoutSessionResult::Ok(checkout_session_id))),
+          Ok(checkout_session_id) => Ok((ws_session_id, CheckoutSessionId::Ok(checkout_session_id))),
           Err(error) => {
             if error.to_string() == "Sell listing unavailable" {
-              Ok((ws_session_id, CheckoutSessionResult::Err(error.to_string())))
+              Ok((ws_session_id, CheckoutSessionId::Err(error.to_string())))
             } else {
               Err(error)
             }
