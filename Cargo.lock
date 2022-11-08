@@ -378,8 +378,8 @@ dependencies = [
 
 [[package]]
 name = "amqp-helpers"
-version = "0.1.8"
-source = "git+https://github.com/ticketland-io/amqp-helpers#794bb40d55ad5e805e2668e4103243ef930d91d0"
+version = "0.1.9"
+source = "git+https://github.com/ticketland-io/amqp-helpers#421cc083057772a43e0bd5bdd8dc4f4b34ae7a5c"
 dependencies = [
  "async-trait",
  "borsh",
