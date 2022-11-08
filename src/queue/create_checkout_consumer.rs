@@ -47,6 +47,13 @@ use crate::{
 // The Solana target slot time is 400ms but we give 50% margin to that ideal value.
 const SOLANA_SLOT_TIME: i64 = 600; // 600 ms
 
+fn is_custom_error(error: &str) -> bool {
+  error == "Ticket unavailable"
+  || error == "Invalid ticket_nft"
+  || error == "Only fixed price ticket types are supported"
+  || error == "Sell listing unavailable"
+}
+
 pub struct CreateCheckoutHandler {
   store: Arc<Store>
 }
@@ -265,7 +272,7 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
           Err(error) => {
             // we don't want to nack if the ticket is unavailable. Instead we need to ack and
             // push CheckoutSession message including the error
-            if error.to_string() == "Ticket unavailable" {
+            if is_custom_error(&error.to_string()) {
               Ok((ws_session_id, CheckoutSessionId::Err(error.to_string())))
             } else {
               Err(error)
@@ -286,7 +293,7 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
         match self.create_secondary_sale_checkout(&msg).await {
           Ok(checkout_session_id) => Ok((ws_session_id, CheckoutSessionId::Ok(checkout_session_id))),
           Err(error) => {
-            if error.to_string() == "Sell listing unavailable" {
+            if is_custom_error(&error.to_string()) {
               Ok((ws_session_id, CheckoutSessionId::Err(error.to_string())))
             } else {
               Err(error)

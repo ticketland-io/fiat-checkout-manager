@@ -266,10 +266,12 @@ pub async fn create_checkout_session(
   // This can happen when someone tries to create a checkout session straigth after someone else
   // has already purchased or is in the middle of checkout or waiting for the service to send the
   // mint tx to the blockchain.
-  let mut redis = store.redis.lock().await;
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
-  if let Ok(_) = redis.get(&redis_key).await {
-    return Err(Report::msg("Ticket not available"))
+  {
+    let mut redis = store.redis.lock().await;
+    if let Ok(_) = redis.get(&redis_key).await {
+      return Err(Report::msg("Ticket not available"))
+    }
   }
 
   let (price, fee) = timeout(
