@@ -36,7 +36,7 @@ use program_artifacts::{
 use crate::{
   models::{
     create_checkout::CreateCheckout,
-    checkout_session::CheckoutSession,
+    checkout_session::{CheckoutSession, Status},
   },
   utils::store::Store,
   services::stripe::{create_primary_sale_checkout, create_secondary_sale_checkout},
@@ -67,7 +67,14 @@ impl CreateCheckoutHandler {
     
     // Fails if the account does not exist
     if result.is_err() {
-      return self.send_reserve_seat_tx(sale, seat_reservation_account, seat_index, seat_name.to_string(), recipient.to_string()).await
+      return self.send_reserve_seat_tx(
+        sale,
+        seat_reservation_account,
+        event_id.to_string(),
+        seat_index,
+        seat_name.to_string(),
+        recipient.to_string()
+      ).await
     }
 
     let seat_reservation = result?;
@@ -80,14 +87,21 @@ impl CreateCheckoutHandler {
       return Ok(())
     }
 
-    self.send_reserve_seat_tx(sale, seat_reservation_account, seat_index, seat_name.to_string(), recipient.to_string()).await
-    .map(|tx_hash| println!("Reserved seat {}:{} for event {}: {:?}", seat_index, &seat_name, &event_id, tx_hash))
+    self.send_reserve_seat_tx(
+      sale,
+      seat_reservation_account,
+      event_id.to_string(),
+      seat_index,
+      seat_name.to_string(),
+      recipient.to_string()
+    ).await
   }
 
   async fn send_reserve_seat_tx(
     &self,
     sale: Pubkey,
     seat_reservation: Pubkey,
+    event_id: String,
     seat_index: u32,
     seat_name: String,
     recipient: String,
@@ -107,7 +121,7 @@ impl CreateCheckoutHandler {
     let duration = (Duration::minutes(30).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
     let data = ReserveSeatIx {
       seat_index,
-      seat_name,
+      seat_name: seat_name.clone(),
       duration,
       recipient: pubkey_from_str(&recipient)?,
     }.data();
@@ -118,9 +132,10 @@ impl CreateCheckoutHandler {
       data,
     };
 
-    self.store.rpc_client.send_tx(ix).await?;
-
-    Ok(())
+    Ok(
+      self.store.rpc_client.send_tx(ix).await
+      .map(|tx_hash| println!("Reserved seat {}:{} for event {}: {:?}", seat_index, &seat_name, &event_id, tx_hash))?
+    )
   }
 
   async fn reserve_sell_listing(&self, msg: &CreateCheckout) -> Result<()> {
@@ -234,7 +249,7 @@ impl CreateCheckoutHandler {
 #[async_trait]
 impl Handler<CreateCheckout> for CreateCheckoutHandler {
   async fn handle(&self, msg: CreateCheckout, _: &Delivery) -> Result<()> {
-    let (ws_session_id, checkout_session_id) = match msg {
+    let (status, ws_session_id, checkout_session_id) = match msg {
       CreateCheckout::Primary {..} => {
         let (ws_session_id, buyer_uid, _, event_id, ticket_nft, _, _, seat_index, seat_name) = msg.primary();
         info!("Creating new checkout for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
@@ -245,9 +260,18 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
           error
         })?;
         
-        let checkout_session_id = self.create_primary_checkout_session(&msg).await?;
-
-        (ws_session_id, checkout_session_id)
+        match self.create_primary_checkout_session(&msg).await {
+          Ok(checkout_session_id) => Ok((Status::Ok, ws_session_id, Some(checkout_session_id))),
+          Err(error) => {
+            // we don't want to nack if the ticket is unavailable. Instead we need to ack and
+            // push CheckoutSession message including the error message
+            if error.to_string() == "Ticket unavailable" {
+              Ok((Status::Err(error.to_string()), ws_session_id, None))
+            } else {
+              Err(error)
+            }
+          }
+        }?
       },
       CreateCheckout::Secondary {..} => {
         let (ws_session_id, buyer_uid, _, event_id, ticket_nft, _, _) = msg.secondary();
@@ -258,14 +282,22 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
           println!("Failed to reserve sell listing for ticket_nft {} and event {}: {:?}",  ticket_nft, event_id, error);
           error
         })?;
-        
-        let checkout_session_id = self.create_secondary_sale_checkout(&msg).await?;
-
-        (ws_session_id, checkout_session_id)
+      
+        match self.create_secondary_sale_checkout(&msg).await {
+          Ok(checkout_session_id) => Ok((Status::Ok, ws_session_id, Some(checkout_session_id))),
+          Err(error) => {
+            if error.to_string() == "Sell listing unavailable" {
+              Ok((Status::Err(error.to_string()), ws_session_id, None))
+            } else {
+              Err(error)
+            }
+          }
+        }?
       }
     };
     
     self.store.checkout_session_producer.new_checkout_session(CheckoutSession {
+      status,
       ws_session_id: ws_session_id.to_string(),
       checkout_session_id,
     }).await?;

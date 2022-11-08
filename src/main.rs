@@ -11,7 +11,6 @@ use fiat_checkout_manager::{
   queue::create_checkout_consumer::CreateCheckoutHandler,
 };
 
-
 fn main() {
   let orig_hook = panic::take_hook();
   panic::set_hook(Box::new(move |panic_info| {

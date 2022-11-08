@@ -42,6 +42,7 @@ use crate::utils::store::Store;
 use super::ticket_purchase::{
   PrePurchaseChecksParams,
   pre_primary_purchase_checks,
+  pre_secondary_purchase_checks,
 };
 
 #[derive(Serialize)]
@@ -243,7 +244,7 @@ pub async fn create_secondary_sale_checkout(
     buyer_uid,
     event_id,
     ticket_nft,
-    Box::pin(pre_primary_purchase_checks(pre_purchase_check_params)),
+    Box::pin(pre_secondary_purchase_checks(pre_purchase_check_params)),
     checkout_metadata,
   ).await
 }
