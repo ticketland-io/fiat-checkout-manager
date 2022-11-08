@@ -1,2 +1,2 @@
-pub mod create_checkout;
-pub mod checkout_session;
+pub mod payment_intent;
+pub mod create_payment;

@@ -1,2 +1,2 @@
-pub mod create_checkout_consumer;
-pub mod checkout_session_producer;
+pub mod payment_producer;
+pub mod create_payment_consumer;

@@ -4,18 +4,16 @@ use std::{
   future::Future,
   pin::Pin,
 };
-use chrono::{Utc, Duration};
-use eyre::{Result, Report};
+use chrono::Duration;
+use eyre::{Result, Report, ContextCompat};
 use serde::{Serialize};
 use stripe::{
   Account, AccountLink, AccountLinkType, AccountType, Client, CreateAccount,
   CreateAccountCapabilities, CreateAccountCapabilitiesCardPayments,
   CreateAccountCapabilitiesTransfers, CreateAccountLink, AccountLinkCollect,
   AccountId, AccountSettingsParams, PayoutSettingsParams, TransferScheduleParams,
-  TransferScheduleInterval, Customer, CreateCustomer, CreateProduct,
-  Product, CreatePrice, Currency, IdOrCreate, Price, CreateCheckoutSession, CheckoutSession,
-  CreateCheckoutSessionLineItems, CheckoutSessionMode, CreateCheckoutSessionPaymentIntentData,
-  CreateCheckoutSessionPaymentIntentDataTransferData, Metadata,
+  TransferScheduleInterval, Customer, CreateCustomer,
+  Currency, CreatePaymentIntent, Metadata, CreatePaymentIntentTransferData, PaymentIntent
 };
 use common_data::{
   helpers::{send_read, send_write},
@@ -48,12 +46,6 @@ use super::ticket_purchase::{
 #[derive(Serialize)]
 pub struct Response {
   pub link: Option<String>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CheckoutSessionResponse {
-  pub session_id: String,
 }
 
 pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String> {
@@ -165,7 +157,7 @@ pub async fn create_stripe_account_link(
 
 type PrePurchaseCheck = Pin<Box<dyn Future<Output = Result<(i64, i64)>> + Send>>;
 
-pub async fn create_primary_sale_checkout(
+pub async fn create_primary_sale_payment(
   store: Arc<Store>,
   buyer_uid: String,
   sale_account: String,
@@ -184,7 +176,7 @@ pub async fn create_primary_sale_checkout(
     ticket_nft: ticket_nft.clone(),
   };
 
-  let checkout_metadata = Some([
+  let payment_metadata = Some([
     ("sale_type".to_string(), "primary".to_string()),
     ("buyer_uid".to_string(), buyer_uid.clone()),
     ("sale_account".to_string(), sale_account.clone()),
@@ -196,17 +188,17 @@ pub async fn create_primary_sale_checkout(
     ("seat_name".to_string(), seat_name.clone()),
   ].iter().cloned().collect());
 
-  create_checkout_session(
+  create_payment(
     store,
     buyer_uid,
     event_id,
     ticket_nft,
     Box::pin(pre_primary_purchase_checks(pre_purchase_check_params)),
-    checkout_metadata,
+    payment_metadata,
   ).await
 }
 
-pub async fn create_secondary_sale_checkout(
+pub async fn create_secondary_sale_payment(
   store: Arc<Store>,
   buyer_uid: String,
   sale_account: String,
@@ -228,7 +220,7 @@ pub async fn create_secondary_sale_checkout(
     sell_listing_account: sell_listing_account.to_string(),
   };
 
-  let checkout_metadata = Some([
+  let payment_metadata = Some([
     ("sale_type".to_string(), "secondary".to_string()),
     ("buyer_uid".to_string(), buyer_uid.clone()),
     ("sale_account".to_string(), sale_account.clone()),
@@ -239,23 +231,23 @@ pub async fn create_secondary_sale_checkout(
     ("sell_listing_account".to_string(), sell_listing_account.to_string()),
   ].iter().cloned().collect());
 
-  create_checkout_session(
+  create_payment(
     store,
     buyer_uid,
     event_id,
     ticket_nft,
     Box::pin(pre_secondary_purchase_checks(pre_purchase_check_params)),
-    checkout_metadata,
+    payment_metadata,
   ).await
 }
 
-pub async fn create_checkout_session(
+pub async fn create_payment(
   store: Arc<Store>,
   buyer_uid: String,
   event_id: String,
   ticket_nft: String,
   pre_purchase_checks: PrePurchaseCheck,
-  checkout_metadata: Option<Metadata>,
+  payment_metadata: Option<Metadata>,
 ) -> Result<String> {
   // There are 5 async calls in this function. Each call will have a time out attached. The total timout is 13 seconds thus
   // this lock will be valid until all calls have successfully processed or until one has a timeout at which point no link is
@@ -263,8 +255,8 @@ pub async fn create_checkout_session(
   let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(15).num_milliseconds() as usize).await?;
   
   // Check if the ticket_nft key is in Redis; If so then the ticket is not available
-  // This can happen when someone tries to create a checkout session straigth after someone else
-  // has already purchased or is in the middle of checkout or waiting for the service to send the
+  // This can happen when someone tries to create a payment session straigth after someone else
+  // has already purchased or is in the middle of payment or waiting for the service to send the
   // mint tx to the blockchain.
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
   {
@@ -291,82 +283,41 @@ pub async fn create_checkout_session(
     },
   ).await?;
 
-  let product = {
-    // TODO: we can additional props to the product such as url name of the event etc.
-    let product_name = format!("Ticket {} for event {}", &ticket_nft, &event_id);
-    let create_product = CreateProduct::new(&product_name);
-
-    timeout(
-      Duration::seconds(2).num_milliseconds() as u64,
-      Product::create(&client, create_product),
-    ).await??
-  };
-
-  let price = {
-    // TODO: we might wnat to support multiple currencies
-    let mut create_price = CreatePrice::new(Currency::USD);
-    create_price.product = Some(IdOrCreate::Id(&product.id));
-    create_price.unit_amount = Some(price);
-    create_price.expand = &["product"];
-
-    timeout(
-      Duration::seconds(2).num_milliseconds() as u64,
-      Price::create(&client, create_price),
-    ).await??
-  };
-
   let (query, db_query_params) = read_event_organizer_stripe_account(event_id.clone());
   let stripe_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
   let stripe_account = TryInto::<StripeAccount>::try_into(stripe_account).unwrap();
 
-  let checkout_session = {
-    let ticketland_dapp = store.config.ticketland_dapp.clone();
-    // TODO: use the correct urls
-    let cancel_url = format!("{}/stripe/cancel", &ticketland_dapp);
-    let success_url = format!("{}/stripe/success", &ticketland_dapp);
-
-    let mut params = CreateCheckoutSession::new(&cancel_url, &success_url);
-    params.expires_at = Some(Utc::now().timestamp() + Duration::minutes(30).num_seconds());
+  let payment_intent = {
+    let mut params = CreatePaymentIntent::new(price, Currency::USD);
     params.customer = Some(customer.id);
-    params.payment_intent_data = Some(CreateCheckoutSessionPaymentIntentData {
-      application_fee_amount: Some(fee),
-      transfer_data: Some(CreateCheckoutSessionPaymentIntentDataTransferData {
-        destination: stripe_account.stripe_uid,
-        ..Default::default()  
-      }),
-      ..Default::default()
+    params.application_fee_amount = Some(fee);
+    params.transfer_data = Some(CreatePaymentIntentTransferData {
+      destination: stripe_account.stripe_uid,
+      ..Default::default()  
     });
-
-    params.mode = Some(CheckoutSessionMode::Payment);
-    params.line_items = Some(vec![CreateCheckoutSessionLineItems {
-      quantity: Some(1),
-      price: Some(price.id.to_string()),
-      ..Default::default()
-    }]);
-    params.expand = &["line_items", "line_items.data.price.product"];
-
-    // We will use this values in the webhook so we can construct the correct TicketPurchase message that will
-    // be further processed by another service.
-    params.metadata = checkout_metadata;
+    params.receipt_email = Some("");
+    params.metadata = payment_metadata;
 
     timeout(
       Duration::seconds(2).num_milliseconds() as u64,
-      CheckoutSession::create(&client, params),
+      PaymentIntent::create(&client, params),
     ).await??
   };
 
   // Store ticket nft in Redis to mark it unavailable
-  // Add ttl that last one minute longer than the checkout duration. This is to avoid some weird
+  // Add ttl that last one minute longer than the payment duration. This is to avoid some weird
   // race conditions i.e. user checkouts the last second, the entry is removed from redis and another
   // user calls this function at the same time at which point the ticket will not be minted nor the record
-  // will be in Redis because it expired and because the checkout webhook has not be called yet to insert the
+  // will be in Redis because it expired and because the payment webhook has not be called yet to insert the
   // entry again into Redis.
   let mut redis = store.redis.lock().await;
   timeout(
     Duration::seconds(2).num_milliseconds() as u64,
-    redis.set_ex(&redis_key, &"1", Duration::minutes(31).num_milliseconds() as usize),
+    redis.set_ex(&redis_key, &"1", Duration::minutes(6).num_milliseconds() as usize),
   ).await??;
 
   store.redlock.unlock(lock).await;
-  Ok(checkout_session.id.to_string())
+
+  let payment_secret = payment_intent.client_secret.context("payment secret not set")?;
+  Ok(payment_secret)
 }

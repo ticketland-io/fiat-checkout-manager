@@ -1,7 +1,7 @@
 use borsh::{BorshSerialize, BorshDeserialize};
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
-pub enum CreateCheckout {
+pub enum CreatePayment {
   Primary {
     ws_session_id: String,
     buyer_uid: String,
@@ -24,10 +24,10 @@ pub enum CreateCheckout {
   }
 }
 
-impl CreateCheckout {
+impl CreatePayment {
   pub fn primary(&self) -> (&str, &str, &str, &str, &str, u8, &str, u32, &str) {
     match self {
-      CreateCheckout::Primary {
+      CreatePayment::Primary {
         ws_session_id,
         buyer_uid,
         sale_account,
@@ -54,7 +54,7 @@ impl CreateCheckout {
 
   pub fn secondary(&self) -> (&str, &str, &str, &str, &str, u8, &str) {
     match self {
-      CreateCheckout::Secondary {
+      CreatePayment::Secondary {
         ws_session_id,
         buyer_uid,
         sale_account,

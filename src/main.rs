@@ -8,7 +8,7 @@ use actix::prelude::*;
 use amqp_helpers::consumer::consumer_runner::ConsumerRunner;
 use fiat_checkout_manager::{
   utils::store::Store,
-  queue::create_checkout_consumer::CreateCheckoutHandler,
+  queue::create_payment_consumer::CreatePaymentHandler,
 };
 
 fn main() {
@@ -31,9 +31,9 @@ fn main() {
 
     let mut role_handler_consumer = ConsumerRunner::new(
       store.config.rabbitmq_uri.clone(),
-      "create_checkout_session".to_owned(),
-      "create_checkout_session".to_owned(),
-      Arc::new(CreateCheckoutHandler::new(store)),
+      "create_payment".to_owned(),
+      "create_payment".to_owned(),
+      Arc::new(CreatePaymentHandler::new(store)),
     ).await;
 
     role_handler_consumer.start().await.unwrap();

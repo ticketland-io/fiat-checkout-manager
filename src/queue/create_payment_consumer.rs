@@ -35,14 +35,13 @@ use program_artifacts::{
 };
 use crate::{
   models::{
-    create_checkout::CreateCheckout,
-    checkout_session::{CheckoutSession, CheckoutSessionId},
+    create_payment::CreatePayment,
+    payment_intent::{PaymentIntent, PaymentSecret},
   },
   utils::store::Store,
-  services::stripe::{create_primary_sale_checkout, create_secondary_sale_checkout},
+  services::stripe::{create_primary_sale_payment, create_secondary_sale_payment},
 };
 
-// TODO: find the number to Slots that correspond to 30 mints which is the Stripe Checkout duration.
 // We can potentially utilize an external service that will give us the average slot for the last day.
 // The Solana target slot time is 400ms but we give 50% margin to that ideal value.
 const SOLANA_SLOT_TIME: i64 = 600; // 600 ms
@@ -54,18 +53,18 @@ fn is_custom_error(error: &str) -> bool {
   || error == "Sell listing unavailable"
 }
 
-pub struct CreateCheckoutHandler {
+pub struct CreatePaymentHandler {
   store: Arc<Store>
 }
 
-impl CreateCheckoutHandler {
+impl CreatePaymentHandler {
   pub fn new(store: Arc<Store>) -> Self {
     Self {
       store,
     }
   }
 
-  async fn reserve_seat(&self, msg: &CreateCheckout) -> Result<()> {
+  async fn reserve_seat(&self, msg: &CreatePayment) -> Result<()> {
     let (_, _, sale_account, event_id, _, _, recipient, seat_index, seat_name) = msg.primary();
     
     let sale = Pubkey::from_str(&sale_account)?;
@@ -88,8 +87,8 @@ impl CreateCheckoutHandler {
     let latest_slot = self.store.rpc_client.get_slot().await?;
 
     // Ignore if it has expired. Note id recipient is the same recipient as the one we're processing this message for
-    // we should still send the reserve seat as this might be a new request for a checkout link so we need to 
-    // upadte the duration of the reservation which will happen in the reserve_seat Ix.
+    // we should still send the reserve seat as this might be a new request for a payment link so we need to 
+    // update the duration of the reservation which will happen in the reserve_seat Ix.
     if latest_slot > seat_reservation.valid_until {
       return Ok(())
     }
@@ -125,7 +124,7 @@ impl CreateCheckoutHandler {
       AccountMeta::new_readonly(Rent::id(), false),
     ];
 
-    let duration = (Duration::minutes(30).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
+    let duration = (Duration::minutes(5).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
     let data = ReserveSeatIx {
       seat_index,
       seat_name: seat_name.clone(),
@@ -145,7 +144,7 @@ impl CreateCheckoutHandler {
     )
   }
 
-  async fn reserve_sell_listing(&self, msg: &CreateCheckout) -> Result<()> {
+  async fn reserve_sell_listing(&self, msg: &CreatePayment) -> Result<()> {
     let (_, _, _, event_id, ticket_nft, _, recipient) = msg.secondary();
     let state = self.store.config.secondary_market_state;
     let ticket_matadata = ticket_nft::pda::ticket_metadata(&self.store.config.ticket_nft_state, &ticket_nft).0;
@@ -167,7 +166,7 @@ impl CreateCheckoutHandler {
     let latest_slot = self.store.rpc_client.get_slot().await?;
 
     // Ignore if it has expired. Note id recipient is the same recipient as the one we're processing this message for
-    // we should still send the reserve seat as this might be a new request for a checkout link so we need to 
+    // we should still send the reserve seat as this might be a new request for a payment link so we need to 
     // upadte the duration of the reservation which will happen in the reserve_seat Ix.
     if latest_slot > sell_listing_reservation.valid_until {
       return Ok(())
@@ -200,7 +199,7 @@ impl CreateCheckoutHandler {
       AccountMeta::new_readonly(Rent::id(), false),
     ];
 
-    let duration = (Duration::minutes(30).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
+    let duration = (Duration::minutes(5).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
     let data = ReserveSellListingIx {
       sell_listing,
       duration,
@@ -218,11 +217,11 @@ impl CreateCheckoutHandler {
     .map(|tx_hash| println!("Reserved sell listing {} for event {}: {:?}", &sell_listing, &event_id, tx_hash))
   }
 
-  async fn create_primary_checkout_session(&self, msg: &CreateCheckout) -> Result<String> {
+  async fn create_primary_payment(&self, msg: &CreatePayment) -> Result<String> {
     let (_, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient, seat_index, seat_name) = msg.primary();
 
     Ok(
-      create_primary_sale_checkout(
+      create_primary_sale_payment(
         Arc::clone(&self.store),
         buyer_uid.to_string(),
         sale_account.to_string(),
@@ -236,11 +235,11 @@ impl CreateCheckoutHandler {
     )
   }
 
-  async fn create_secondary_sale_checkout(&self, msg: &CreateCheckout) -> Result<String> {
+  async fn create_secondary_sale_payment(&self, msg: &CreatePayment) -> Result<String> {
     let (_, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient) = msg.secondary();
 
     Ok(
-      create_secondary_sale_checkout(
+      create_secondary_sale_payment(
         Arc::clone(&self.store),
         buyer_uid.to_string(),
         sale_account.to_string(),
@@ -254,12 +253,12 @@ impl CreateCheckoutHandler {
 }
 
 #[async_trait]
-impl Handler<CreateCheckout> for CreateCheckoutHandler {
-  async fn handle(&self, msg: CreateCheckout, _: &Delivery) -> Result<()> {
-    let (ws_session_id, checkout_session_id) = match msg {
-      CreateCheckout::Primary {..} => {
+impl Handler<CreatePayment> for CreatePaymentHandler {
+  async fn handle(&self, msg: CreatePayment, _: &Delivery) -> Result<()> {
+    let (ws_session_id, payment_secret) = match msg {
+      CreatePayment::Primary {..} => {
         let (ws_session_id, buyer_uid, _, event_id, ticket_nft, _, _, seat_index, seat_name) = msg.primary();
-        info!("Creating new checkout for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
+        info!("Creating new payment for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
 
         with_retry(None, None, || self.reserve_seat(&msg)).await
         .map_err(|error| {
@@ -267,22 +266,22 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
           error
         })?;
         
-        match self.create_primary_checkout_session(&msg).await {
-          Ok(checkout_session_id) => Ok((ws_session_id, CheckoutSessionId::Ok(checkout_session_id))),
+        match self.create_primary_payment(&msg).await {
+          Ok(payment_secret) => Ok((ws_session_id, PaymentSecret::Ok(payment_secret))),
           Err(error) => {
             // we don't want to nack if the ticket is unavailable. Instead we need to ack and
-            // push CheckoutSession message including the error
+            // push PaymentIntent message including the error
             if is_custom_error(&error.to_string()) {
-              Ok((ws_session_id, CheckoutSessionId::Err(error.to_string())))
+              Ok((ws_session_id, PaymentSecret::Err(error.to_string())))
             } else {
               Err(error)
             }
           }
         }?
       },
-      CreateCheckout::Secondary {..} => {
+      CreatePayment::Secondary {..} => {
         let (ws_session_id, buyer_uid, _, event_id, ticket_nft, _, _) = msg.secondary();
-        info!("Creating new secondary checkout for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
+        info!("Creating new secondary payment for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
         
         with_retry(None, None, || self.reserve_sell_listing(&msg)).await
         .map_err(|error| {
@@ -290,11 +289,11 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
           error
         })?;
       
-        match self.create_secondary_sale_checkout(&msg).await {
-          Ok(checkout_session_id) => Ok((ws_session_id, CheckoutSessionId::Ok(checkout_session_id))),
+        match self.create_secondary_sale_payment(&msg).await {
+          Ok(payment_secret) => Ok((ws_session_id, PaymentSecret::Ok(payment_secret))),
           Err(error) => {
             if is_custom_error(&error.to_string()) {
-              Ok((ws_session_id, CheckoutSessionId::Err(error.to_string())))
+              Ok((ws_session_id, PaymentSecret::Err(error.to_string())))
             } else {
               Err(error)
             }
@@ -303,9 +302,9 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
       }
     };
     
-    self.store.checkout_session_producer.new_checkout_session(CheckoutSession {
+    self.store.payment_producer.new_payment(PaymentIntent {
       ws_session_id: ws_session_id.to_string(),
-      checkout_session_id,
+      payment_secret,
     }).await?;
 
     Ok(())

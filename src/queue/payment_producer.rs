@@ -1,19 +1,19 @@
 use eyre::Result;
 use borsh::{BorshSerialize};
 use amqp_helpers::producer::retry_producer::RetryProducer;
-use crate::models::checkout_session::CheckoutSession;
+use crate::models::payment_intent::PaymentIntent;
 
-pub struct CheckoutSessionProducer {
+pub struct PaymentProducer {
   producer: RetryProducer,
 }
 
-impl CheckoutSessionProducer {
+impl PaymentProducer {
   pub async fn new(rabbitmq_uri: String, retry_ttl: u16,) -> Self {
     let producer = RetryProducer::new(
       &rabbitmq_uri,
-      &"checkout_session_created",
-      &"checkout_session_created",
-      &"checkout_session_created.new",
+      &"payment_created",
+      &"payment_created",
+      &"payment_created.new",
       retry_ttl,
     ).await.unwrap();
 
@@ -22,10 +22,10 @@ impl CheckoutSessionProducer {
     }
   }
 
-  pub async fn new_checkout_session(&self, msg: CheckoutSession) -> Result<()> {
+  pub async fn new_payment(&self, msg: PaymentIntent) -> Result<()> {
     self.producer.publish(
-      &"checkout_session_created",
-      &"checkout_session_created.new",
+      &"payment_created",
+      &"payment_created.new",
       &msg.try_to_vec()?
     ).await
   }
