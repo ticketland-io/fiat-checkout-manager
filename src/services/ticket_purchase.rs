@@ -16,6 +16,7 @@ use common_data::{
 };
 use program_artifacts::{
   ticket_nft::pda,
+  event_registry::account_data::EventId,
 };
 use solana_sdk::{
   pubkey::Pubkey,
@@ -27,8 +28,6 @@ use super::price_feed::get_sol_price;
 
 // 1 unit in Stripe is 100
 const STRIPE_UNIT: i64 = 100;
-const STRIPE_FIXED_FEE: i64 = 30; // 30c
-const STRIPE_FEE_PERC: i64 = 29; // 2.9%
 
 /// This is the amount in SOL needed to send a transaction that will mint a new ticket NFT
 /// TODO: use the correct value here
@@ -49,13 +48,11 @@ pub async fn calculate_price_and_fees(
   // Thus we need to remove 6 decimals from the DB value. This would need
   // to be more dynamic in the future. The decimals will be stored in the DB
   // record as well
-  let ticket_price = ticket_price / 1000000;
+  let ticket_price = to_stripe_unit(ticket_price / 1000000);
   let protocol_fee = (ticket_price * protocol_fee_perc) / 10_000;
-  let sol_price = to_stripe_unit(get_sol_price(store).await?);
+  let sol_price = get_sol_price(store).await?;
   let mint_cost = (mint_cost * sol_price) / 1000;
-  let stripe_fee = (ticket_price * STRIPE_FEE_PERC) / 1000;
-  let total_stripe_fees = stripe_fee + STRIPE_FIXED_FEE; // 2.9% + 30c
-  let total_fees = protocol_fee + mint_cost + total_stripe_fees;
+  let total_fees = protocol_fee + mint_cost;
 
   Ok((ticket_price as i64, total_fees as i64))
 }
@@ -110,10 +107,11 @@ pub async fn pre_primary_purchase_checks(params: PrePurchaseChecksParams) -> Res
   .await
   .map(TryInto::<Sale>::try_into)??;
 
+  let event_id = EventId(event_id);
   let (ticket_nft_pda, _) = pda::ticket_nft(
     ticket_nft_state,
     seat_index,
-    &event_id,
+    &event_id.val(),
     sale.ticket_type_index,
   );
 

@@ -1241,8 +1241,8 @@ dependencies = [
 
 [[package]]
 name = "common-data"
-version = "0.3.37"
-source = "git+https://github.com/ticketland-io/common-rust#eec5ecc0cdb097ec6650f818375a97fffd6524a0"
+version = "0.3.38"
+source = "git+https://github.com/ticketland-io/common-rust#e6d4f0754047d138f51d1448fad97b56d823ddca"
 dependencies = [
  "actix",
  "bolt-client",
@@ -5383,7 +5383,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.2.13"
-source = "git+https://github.com/ticketland-io/common-rust#eec5ecc0cdb097ec6650f818375a97fffd6524a0"
+source = "git+https://github.com/ticketland-io/common-rust#e6d4f0754047d138f51d1448fad97b56d823ddca"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5445,7 +5445,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#eec5ecc0cdb097ec6650f818375a97fffd6524a0"
+source = "git+https://github.com/ticketland-io/common-rust#e6d4f0754047d138f51d1448fad97b56d823ddca"
 dependencies = [
  "lazy_static",
 ]

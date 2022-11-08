@@ -155,20 +155,20 @@ pub async fn create_payment(
 
   let client = Client::new(store.config.stripe_key.clone());
   let neo4j = Arc::clone(&store.neo4j);
+  let (query, db_query_params) = read_account(buyer_uid.clone());
+  let account = send_read(Arc::clone(&neo4j), query, db_query_params).await.map(TryInto::<Account>::try_into)??;
 
-  // TODO: we need to add name and email as well. We can read these values from the DB
-  let customer = Customer::create(
-    &client,
-    CreateCustomer {
-      description: Some(&buyer_uid.clone()),
-      ..Default::default()
-    },
-  ).await?;
+  let descr = buyer_uid.clone();
+  let customer = CreateCustomer {
+    description: Some(&descr),
+    email: account.email.as_ref().map(String::as_str),
+    ..Default::default()
+  };
+
+  let customer = Customer::create(&client, customer).await?;
 
   let (query, db_query_params) = read_event_organizer_stripe_account(event_id.clone());
   let stripe_account = send_read(Arc::clone(&neo4j), query, db_query_params).await.map(TryInto::<StripeAccount>::try_into)??;
-  let (query, db_query_params) = read_account(buyer_uid.clone());
-  let account = send_read(Arc::clone(&neo4j), query, db_query_params).await.map(TryInto::<Account>::try_into)??;
 
   let payment_intent = {
     let mut params = CreatePaymentIntent::new(price, Currency::USD);
@@ -178,7 +178,7 @@ pub async fn create_payment(
       destination: stripe_account.stripe_uid,
       ..Default::default()  
     });
-    params.receipt_email = Some(&account.email);
+    params.receipt_email = account.email.as_ref().map(String::as_str);
     params.metadata = payment_metadata;
 
     timeout(

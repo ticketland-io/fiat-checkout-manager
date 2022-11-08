@@ -17,7 +17,7 @@ dotenv = "0.15"
 eyre = "0.6.8"
 amqp-helpers = { git = "https://github.com/ticketland-io/amqp-helpers", version = "0.1.9" }
 ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.13"  }
-common-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.3.36"  }
+common-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.3.38"  }
 ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.1.11" }
 program-artifacts = { git = "https://github.com/ticketland-io/program-artifacts", version = "0.1.27" }
 price-feed = { git = "https://github.com/ticketland-io/price-feed", version = "0.1.1" }
