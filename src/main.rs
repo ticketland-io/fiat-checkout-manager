@@ -33,7 +33,7 @@ fn main() {
       store.config.rabbitmq_uri.clone(),
       "create_checkout_session".to_owned(),
       "create_checkout_session".to_owned(),
-      Arc::new(CreateCheckoutHandler::new(store).await),
+      Arc::new(CreateCheckoutHandler::new(store)),
     ).await;
 
     role_handler_consumer.start().await.unwrap();

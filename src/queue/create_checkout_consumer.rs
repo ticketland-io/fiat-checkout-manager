@@ -52,7 +52,7 @@ pub struct CreateCheckoutHandler {
 }
 
 impl CreateCheckoutHandler {
-  pub async fn new(store: Arc<Store>) -> Self {
+  pub fn new(store: Arc<Store>) -> Self {
     Self {
       store,
     }
@@ -264,7 +264,7 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
           Ok(checkout_session_id) => Ok((Status::Ok, ws_session_id, Some(checkout_session_id))),
           Err(error) => {
             // we don't want to nack if the ticket is unavailable. Instead we need to ack and
-            // push CheckoutSession message including the error message
+            // push CheckoutSession message including the error
             if error.to_string() == "Ticket unavailable" {
               Ok((Status::Err(error.to_string()), ws_session_id, None))
             } else {
