@@ -48,12 +48,6 @@ pub struct Response {
   pub link: Option<String>,
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CheckoutSessionResponse {
-  pub session_id: String,
-}
-
 pub async fn create_link(store: Arc<Store>, uid: String) -> Result<String> {
   let neo4j = Arc::clone(&store.neo4j);
   let ticketland_dapp = store.config.ticketland_dapp.clone();
@@ -182,7 +176,7 @@ pub async fn create_primary_sale_payment(
     ticket_nft: ticket_nft.clone(),
   };
 
-  let checkout_metadata = Some([
+  let payment_metadata = Some([
     ("sale_type".to_string(), "primary".to_string()),
     ("buyer_uid".to_string(), buyer_uid.clone()),
     ("sale_account".to_string(), sale_account.clone()),
@@ -200,7 +194,7 @@ pub async fn create_primary_sale_payment(
     event_id,
     ticket_nft,
     Box::pin(pre_primary_purchase_checks(pre_purchase_check_params)),
-    checkout_metadata,
+    payment_metadata,
   ).await
 }
 
@@ -226,7 +220,7 @@ pub async fn create_secondary_sale_payment(
     sell_listing_account: sell_listing_account.to_string(),
   };
 
-  let checkout_metadata = Some([
+  let payment_metadata = Some([
     ("sale_type".to_string(), "secondary".to_string()),
     ("buyer_uid".to_string(), buyer_uid.clone()),
     ("sale_account".to_string(), sale_account.clone()),
@@ -243,7 +237,7 @@ pub async fn create_secondary_sale_payment(
     event_id,
     ticket_nft,
     Box::pin(pre_secondary_purchase_checks(pre_purchase_check_params)),
-    checkout_metadata,
+    payment_metadata,
   ).await
 }
 
@@ -253,7 +247,7 @@ pub async fn create_payment(
   event_id: String,
   ticket_nft: String,
   pre_purchase_checks: PrePurchaseCheck,
-  checkout_metadata: Option<Metadata>,
+  payment_metadata: Option<Metadata>,
 ) -> Result<String> {
   // There are 5 async calls in this function. Each call will have a time out attached. The total timout is 13 seconds thus
   // this lock will be valid until all calls have successfully processed or until one has a timeout at which point no link is
@@ -261,8 +255,8 @@ pub async fn create_payment(
   let lock = store.redlock.lock(ticket_nft.as_bytes(), Duration::seconds(15).num_milliseconds() as usize).await?;
   
   // Check if the ticket_nft key is in Redis; If so then the ticket is not available
-  // This can happen when someone tries to create a checkout session straigth after someone else
-  // has already purchased or is in the middle of checkout or waiting for the service to send the
+  // This can happen when someone tries to create a payment session straigth after someone else
+  // has already purchased or is in the middle of payment or waiting for the service to send the
   // mint tx to the blockchain.
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
   {
@@ -302,7 +296,7 @@ pub async fn create_payment(
       ..Default::default()  
     });
     params.receipt_email = Some("");
-    params.metadata = checkout_metadata;
+    params.metadata = payment_metadata;
 
     timeout(
       Duration::seconds(2).num_milliseconds() as u64,
@@ -311,15 +305,15 @@ pub async fn create_payment(
   };
 
   // Store ticket nft in Redis to mark it unavailable
-  // Add ttl that last one minute longer than the checkout duration. This is to avoid some weird
+  // Add ttl that last one minute longer than the payment duration. This is to avoid some weird
   // race conditions i.e. user checkouts the last second, the entry is removed from redis and another
   // user calls this function at the same time at which point the ticket will not be minted nor the record
-  // will be in Redis because it expired and because the checkout webhook has not be called yet to insert the
+  // will be in Redis because it expired and because the payment webhook has not be called yet to insert the
   // entry again into Redis.
   let mut redis = store.redis.lock().await;
   timeout(
     Duration::seconds(2).num_milliseconds() as u64,
-    redis.set_ex(&redis_key, &"1", Duration::minutes(31).num_milliseconds() as usize),
+    redis.set_ex(&redis_key, &"1", Duration::minutes(6).num_milliseconds() as usize),
   ).await??;
 
   store.redlock.unlock(lock).await;

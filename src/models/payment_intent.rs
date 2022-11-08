@@ -1,13 +1,13 @@
 use borsh::{BorshSerialize, BorshDeserialize};
 
 #[derive(Debug, BorshSerialize, BorshDeserialize)]
-pub enum CheckoutSessionId {
+pub enum PaymentSecret {
   Ok(String),
   Err(String),
 }
 
 #[derive(BorshSerialize, BorshDeserialize)]
-pub struct CheckoutSession {
+pub struct PaymentIntent {
   pub ws_session_id: String,
-  pub checkout_session_id: CheckoutSessionId,
+  pub payment_secret: PaymentSecret,
 }
