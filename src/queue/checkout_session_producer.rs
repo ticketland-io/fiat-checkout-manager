@@ -26,7 +26,7 @@ impl CheckoutSessionProducer {
     self.producer.publish(
       &"checkout_session_created",
       &"checkout_session_created.new",
-      &msg.try_to_vec().unwrap()
+      &msg.try_to_vec()?
     ).await
   }
 }
