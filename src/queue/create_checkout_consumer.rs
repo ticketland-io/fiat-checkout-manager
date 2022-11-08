@@ -39,7 +39,7 @@ use crate::{
     checkout_session::{CheckoutSession, CheckoutSessionId},
   },
   utils::store::Store,
-  services::stripe::{create_primary_sale_checkout, create_secondary_sale_checkout},
+  services::stripe::{create_primary_sale_payment, create_secondary_sale_payment},
 };
 
 // TODO: find the number to Slots that correspond to 30 mints which is the Stripe Checkout duration.
@@ -222,7 +222,7 @@ impl CreateCheckoutHandler {
     let (_, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient, seat_index, seat_name) = msg.primary();
 
     Ok(
-      create_primary_sale_checkout(
+      create_primary_sale_payment(
         Arc::clone(&self.store),
         buyer_uid.to_string(),
         sale_account.to_string(),
@@ -236,11 +236,11 @@ impl CreateCheckoutHandler {
     )
   }
 
-  async fn create_secondary_sale_checkout(&self, msg: &CreateCheckout) -> Result<String> {
+  async fn create_secondary_sale_payment(&self, msg: &CreateCheckout) -> Result<String> {
     let (_, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient) = msg.secondary();
 
     Ok(
-      create_secondary_sale_checkout(
+      create_secondary_sale_payment(
         Arc::clone(&self.store),
         buyer_uid.to_string(),
         sale_account.to_string(),
@@ -290,7 +290,7 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
           error
         })?;
       
-        match self.create_secondary_sale_checkout(&msg).await {
+        match self.create_secondary_sale_payment(&msg).await {
           Ok(checkout_session_id) => Ok((ws_session_id, CheckoutSessionId::Ok(checkout_session_id))),
           Err(error) => {
             if is_custom_error(&error.to_string()) {

@@ -4,18 +4,16 @@ use std::{
   future::Future,
   pin::Pin,
 };
-use chrono::{Utc, Duration};
-use eyre::{Result, Report};
+use chrono::Duration;
+use eyre::{Result, Report, ContextCompat};
 use serde::{Serialize};
 use stripe::{
   Account, AccountLink, AccountLinkType, AccountType, Client, CreateAccount,
   CreateAccountCapabilities, CreateAccountCapabilitiesCardPayments,
   CreateAccountCapabilitiesTransfers, CreateAccountLink, AccountLinkCollect,
   AccountId, AccountSettingsParams, PayoutSettingsParams, TransferScheduleParams,
-  TransferScheduleInterval, Customer, CreateCustomer, CreateProduct,
-  Product, CreatePrice, Currency, IdOrCreate, Price, CreateCheckoutSession, CheckoutSession,
-  CreateCheckoutSessionLineItems, CheckoutSessionMode, CreateCheckoutSessionPaymentIntentData,
-  CreateCheckoutSessionPaymentIntentDataTransferData, Metadata,
+  TransferScheduleInterval, Customer, CreateCustomer,
+  Currency, CreatePaymentIntent, Metadata, CreatePaymentIntentTransferData, PaymentIntent
 };
 use common_data::{
   helpers::{send_read, send_write},
@@ -165,7 +163,7 @@ pub async fn create_stripe_account_link(
 
 type PrePurchaseCheck = Pin<Box<dyn Future<Output = Result<(i64, i64)>> + Send>>;
 
-pub async fn create_primary_sale_checkout(
+pub async fn create_primary_sale_payment(
   store: Arc<Store>,
   buyer_uid: String,
   sale_account: String,
@@ -196,7 +194,7 @@ pub async fn create_primary_sale_checkout(
     ("seat_name".to_string(), seat_name.clone()),
   ].iter().cloned().collect());
 
-  create_checkout_session(
+  create_payment(
     store,
     buyer_uid,
     event_id,
@@ -206,7 +204,7 @@ pub async fn create_primary_sale_checkout(
   ).await
 }
 
-pub async fn create_secondary_sale_checkout(
+pub async fn create_secondary_sale_payment(
   store: Arc<Store>,
   buyer_uid: String,
   sale_account: String,
@@ -239,7 +237,7 @@ pub async fn create_secondary_sale_checkout(
     ("sell_listing_account".to_string(), sell_listing_account.to_string()),
   ].iter().cloned().collect());
 
-  create_checkout_session(
+  create_payment(
     store,
     buyer_uid,
     event_id,
@@ -249,7 +247,7 @@ pub async fn create_secondary_sale_checkout(
   ).await
 }
 
-pub async fn create_checkout_session(
+pub async fn create_payment(
   store: Arc<Store>,
   buyer_uid: String,
   event_id: String,
@@ -291,67 +289,24 @@ pub async fn create_checkout_session(
     },
   ).await?;
 
-  let product = {
-    // TODO: we can additional props to the product such as url name of the event etc.
-    let product_name = format!("Ticket {} for event {}", &ticket_nft, &event_id);
-    let create_product = CreateProduct::new(&product_name);
-
-    timeout(
-      Duration::seconds(2).num_milliseconds() as u64,
-      Product::create(&client, create_product),
-    ).await??
-  };
-
-  let price = {
-    // TODO: we might wnat to support multiple currencies
-    let mut create_price = CreatePrice::new(Currency::USD);
-    create_price.product = Some(IdOrCreate::Id(&product.id));
-    create_price.unit_amount = Some(price);
-    create_price.expand = &["product"];
-
-    timeout(
-      Duration::seconds(2).num_milliseconds() as u64,
-      Price::create(&client, create_price),
-    ).await??
-  };
-
   let (query, db_query_params) = read_event_organizer_stripe_account(event_id.clone());
   let stripe_account = send_read(Arc::clone(&neo4j), query, db_query_params).await?;
   let stripe_account = TryInto::<StripeAccount>::try_into(stripe_account).unwrap();
 
-  let checkout_session = {
-    let ticketland_dapp = store.config.ticketland_dapp.clone();
-    // TODO: use the correct urls
-    let cancel_url = format!("{}/stripe/cancel", &ticketland_dapp);
-    let success_url = format!("{}/stripe/success", &ticketland_dapp);
-
-    let mut params = CreateCheckoutSession::new(&cancel_url, &success_url);
-    params.expires_at = Some(Utc::now().timestamp() + Duration::minutes(30).num_seconds());
+  let payment_intent = {
+    let mut params = CreatePaymentIntent::new(price, Currency::USD);
     params.customer = Some(customer.id);
-    params.payment_intent_data = Some(CreateCheckoutSessionPaymentIntentData {
-      application_fee_amount: Some(fee),
-      transfer_data: Some(CreateCheckoutSessionPaymentIntentDataTransferData {
-        destination: stripe_account.stripe_uid,
-        ..Default::default()  
-      }),
-      ..Default::default()
+    params.application_fee_amount = Some(fee);
+    params.transfer_data = Some(CreatePaymentIntentTransferData {
+      destination: stripe_account.stripe_uid,
+      ..Default::default()  
     });
-
-    params.mode = Some(CheckoutSessionMode::Payment);
-    params.line_items = Some(vec![CreateCheckoutSessionLineItems {
-      quantity: Some(1),
-      price: Some(price.id.to_string()),
-      ..Default::default()
-    }]);
-    params.expand = &["line_items", "line_items.data.price.product"];
-
-    // We will use this values in the webhook so we can construct the correct TicketPurchase message that will
-    // be further processed by another service.
+    params.receipt_email = Some("");
     params.metadata = checkout_metadata;
 
     timeout(
       Duration::seconds(2).num_milliseconds() as u64,
-      CheckoutSession::create(&client, params),
+      PaymentIntent::create(&client, params),
     ).await??
   };
 
@@ -368,5 +323,7 @@ pub async fn create_checkout_session(
   ).await??;
 
   store.redlock.unlock(lock).await;
-  Ok(checkout_session.id.to_string())
+
+  let payment_secret = payment_intent.client_secret.context("payment secret not set")?;
+  Ok(payment_secret)
 }
