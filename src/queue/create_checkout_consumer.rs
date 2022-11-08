@@ -36,7 +36,7 @@ use program_artifacts::{
 use crate::{
   models::{
     create_checkout::CreateCheckout,
-    checkout_session::{CheckoutSession, Status},
+    checkout_session::{CheckoutSession, CheckoutSessionResult},
   },
   utils::store::Store,
   services::stripe::{create_primary_sale_checkout, create_secondary_sale_checkout},
@@ -249,7 +249,7 @@ impl CreateCheckoutHandler {
 #[async_trait]
 impl Handler<CreateCheckout> for CreateCheckoutHandler {
   async fn handle(&self, msg: CreateCheckout, _: &Delivery) -> Result<()> {
-    let (status, ws_session_id, checkout_session_id) = match msg {
+    let (ws_session_id, checkout_session_id) = match msg {
       CreateCheckout::Primary {..} => {
         let (ws_session_id, buyer_uid, _, event_id, ticket_nft, _, _, seat_index, seat_name) = msg.primary();
         info!("Creating new checkout for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
@@ -261,12 +261,12 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
         })?;
         
         match self.create_primary_checkout_session(&msg).await {
-          Ok(checkout_session_id) => Ok((Status::Ok, ws_session_id, Some(checkout_session_id))),
+          Ok(checkout_session_id) => Ok((ws_session_id, CheckoutSessionResult::Ok(checkout_session_id))),
           Err(error) => {
             // we don't want to nack if the ticket is unavailable. Instead we need to ack and
             // push CheckoutSession message including the error
             if error.to_string() == "Ticket unavailable" {
-              Ok((Status::Err(error.to_string()), ws_session_id, None))
+              Ok((ws_session_id, CheckoutSessionResult::Err(error.to_string())))
             } else {
               Err(error)
             }
@@ -284,10 +284,10 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
         })?;
       
         match self.create_secondary_sale_checkout(&msg).await {
-          Ok(checkout_session_id) => Ok((Status::Ok, ws_session_id, Some(checkout_session_id))),
+          Ok(checkout_session_id) => Ok((ws_session_id, CheckoutSessionResult::Ok(checkout_session_id))),
           Err(error) => {
             if error.to_string() == "Sell listing unavailable" {
-              Ok((Status::Err(error.to_string()), ws_session_id, None))
+              Ok((ws_session_id, CheckoutSessionResult::Err(error.to_string())))
             } else {
               Err(error)
             }
@@ -297,7 +297,6 @@ impl Handler<CreateCheckout> for CreateCheckoutHandler {
     };
     
     self.store.checkout_session_producer.new_checkout_session(CheckoutSession {
-      status,
       ws_session_id: ws_session_id.to_string(),
       checkout_session_id,
     }).await?;
