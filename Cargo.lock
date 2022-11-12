@@ -1240,19 +1240,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "common-data"
-version = "0.3.38"
-source = "git+https://github.com/ticketland-io/common-rust#e6d4f0754047d138f51d1448fad97b56d823ddca"
-dependencies = [
- "actix",
- "bolt-client",
- "bolt-proto",
- "serde",
- "serde-aux",
- "ticketland-core",
-]
-
-[[package]]
 name = "common-multipart-rfc7578"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1615,6 +1602,57 @@ dependencies = [
 ]
 
 [[package]]
+name = "diesel"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68c186a7418a2aac330bb76cde82f16c36b03a66fb91db32d20214311f9f6545"
+dependencies = [
+ "bitflags",
+ "byteorder",
+ "chrono",
+ "diesel_derives",
+ "itoa",
+ "pq-sys",
+]
+
+[[package]]
+name = "diesel-async"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "588383fa6d12fb17edf0fda88942222bbad070d185b5dcc3ac4d8354ce84b583"
+dependencies = [
+ "async-trait",
+ "diesel",
+ "futures",
+ "tokio",
+ "tokio-postgres",
+]
+
+[[package]]
+name = "diesel_as_jsonb"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc25acd76bc20f38d0384f77a3d6ce768f95c76f433a5bea16c825d194158f64"
+dependencies = [
+ "heck 0.4.0",
+ "proc-macro2 1.0.47",
+ "quote 1.0.21",
+ "syn 1.0.103",
+]
+
+[[package]]
+name = "diesel_derives"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "143b758c91dbc3fe1fdcb0dba5bd13276c6a66422f2ef5795b58488248a310aa"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2 1.0.47",
+ "quote 1.0.21",
+ "syn 1.0.103",
+]
+
+[[package]]
 name = "digest"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1860,6 +1898,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fallible-iterator"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4443176a9f2c162692bd3d352d745ef9413eec5782a80d8fd6f8a1ac692a07f7"
+
+[[package]]
 name = "fastrand"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1885,7 +1929,6 @@ dependencies = [
  "async-trait",
  "borsh",
  "chrono",
- "common-data",
  "dotenv",
  "eyre",
  "lapin",
@@ -1896,6 +1939,7 @@ dependencies = [
  "solana-sdk",
  "solana-web3-rust",
  "ticketland-core",
+ "ticketland-data",
  "ticketland-event-handler",
  "tokio",
  "tracing",
@@ -2177,6 +2221,12 @@ checksum = "6d621efb26863f0e9924c6ac577e8275e5e6b77455db64ffa6c65c904e9e132c"
 dependencies = [
  "unicode-segmentation",
 ]
+
+[[package]]
+name = "heck"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
 
 [[package]]
 name = "hermit-abi"
@@ -2782,6 +2832,15 @@ dependencies = [
  "proc-macro2 1.0.47",
  "quote 1.0.21",
  "syn 1.0.103",
+]
+
+[[package]]
+name = "md-5"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6365506850d44bff6e2fbcb5176cf63650e48bd45ef2fe2665ae1570e0f4b9ca"
+dependencies = [
+ "digest 0.10.5",
 ]
 
 [[package]]
@@ -3484,10 +3543,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "postgres-protocol"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "878c6cbf956e03af9aa8204b407b9cbf47c072164800aa918c516cd4b056c50c"
+dependencies = [
+ "base64 0.13.1",
+ "byteorder",
+ "bytes",
+ "fallible-iterator",
+ "hmac 0.12.1",
+ "md-5",
+ "memchr",
+ "rand 0.8.5",
+ "sha2 0.10.6",
+ "stringprep",
+]
+
+[[package]]
+name = "postgres-types"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73d946ec7d256b04dfadc4e6a3292324e6f417124750fc5c0950f981b703a0f1"
+dependencies = [
+ "bytes",
+ "fallible-iterator",
+ "postgres-protocol",
+]
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
+
+[[package]]
+name = "pq-sys"
+version = "0.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b845d6d8ec554f972a2c5298aad68953fd64e7441e846075450b44656a016d1"
+dependencies = [
+ "vcpkg",
+]
 
 [[package]]
 name = "price-feed"
@@ -3568,8 +3665,8 @@ dependencies = [
 
 [[package]]
 name = "program-artifacts"
-version = "0.1.27"
-source = "git+https://github.com/ticketland-io/program-artifacts#f900ec4ca161758f000f97c1e46fa6d8ad87ee08"
+version = "0.1.32"
+source = "git+https://github.com/ticketland-io/program-artifacts#d6290e055b5d4326f2baa02110031419b58f4106"
 dependencies = [
  "borsh",
  "eyre",
@@ -5222,6 +5319,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
+name = "stringprep"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ee348cb74b87454fff4b551cbf727025810a004f88aeacae7f85b87f4e9a1c1"
+dependencies = [
+ "unicode-bidi",
+ "unicode-normalization",
+]
+
+[[package]]
 name = "strsim"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5245,7 +5352,7 @@ version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "87c85aa3f8ea653bfd3ddf25f7ee357ee4d204731f6aa9ad04002306f6e2774c"
 dependencies = [
- "heck",
+ "heck 0.3.3",
  "proc-macro2 1.0.47",
  "quote 1.0.21",
  "syn 1.0.103",
@@ -5382,8 +5489,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-core"
-version = "0.2.13"
-source = "git+https://github.com/ticketland-io/common-rust#e6d4f0754047d138f51d1448fad97b56d823ddca"
+version = "0.2.15"
+source = "git+https://github.com/ticketland-io/common-rust#1f24a47e2eca73fe26a0846a6eeaf370e2ded715"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5412,9 +5519,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "ticketland-data"
+version = "0.1.24"
+source = "git+https://github.com/ticketland-io/common-rust#1f24a47e2eca73fe26a0846a6eeaf370e2ded715"
+dependencies = [
+ "chrono",
+ "diesel",
+ "diesel-async",
+ "diesel_as_jsonb",
+ "eyre",
+ "futures",
+ "serde",
+ "serde-aux",
+ "serde_json",
+]
+
+[[package]]
 name = "ticketland-event-handler"
-version = "0.1.11"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#10ba7d7b15a61815aefc59e6c8ad66a6b0c56248"
+version = "0.1.16"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#ac4e8e7bef45470e03491829ef8252e0725f4fe3"
 dependencies = [
  "actix",
  "actix-rt",
@@ -5422,7 +5545,6 @@ dependencies = [
  "async-trait",
  "borsh",
  "bytes",
- "common-data",
  "dotenv",
  "eyre",
  "futures",
@@ -5437,15 +5559,17 @@ dependencies = [
  "solana-sdk",
  "solana-web3-rust",
  "ticketland-core",
+ "ticketland-data",
  "tokio",
  "tokio-stream",
  "tokio-util 0.7.4",
+ "tracing-subscriber",
 ]
 
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#e6d4f0754047d138f51d1448fad97b56d823ddca"
+source = "git+https://github.com/ticketland-io/common-rust#1f24a47e2eca73fe26a0846a6eeaf370e2ded715"
 dependencies = [
  "lazy_static",
 ]
@@ -5574,6 +5698,30 @@ checksum = "f7d995660bd2b7f8c1568414c1126076c13fbb725c40112dc0120b78eb9b717b"
 dependencies = [
  "native-tls",
  "tokio",
+]
+
+[[package]]
+name = "tokio-postgres"
+version = "0.7.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29a12c1b3e0704ae7dfc25562629798b29c72e6b1d0a681b6f29ab4ae5e7f7bf"
+dependencies = [
+ "async-trait",
+ "byteorder",
+ "bytes",
+ "fallible-iterator",
+ "futures-channel",
+ "futures-util",
+ "log",
+ "parking_lot",
+ "percent-encoding",
+ "phf",
+ "pin-project-lite",
+ "postgres-protocol",
+ "postgres-types",
+ "socket2",
+ "tokio",
+ "tokio-util 0.7.4",
 ]
 
 [[package]]

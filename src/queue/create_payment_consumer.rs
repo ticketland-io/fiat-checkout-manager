@@ -42,7 +42,7 @@ use crate::{
   services::stripe::{create_primary_sale_payment, create_secondary_sale_payment},
 };
 
-// We can potentially utilize an external service that will give us the average slot for the last day.
+// TODO: We can potentially utilize an external service that will give us the average slot for the last day.
 // The Solana target slot time is 400ms but we give 50% margin to that ideal value.
 const SOLANA_SLOT_TIME: i64 = 600; // 600 ms
 
@@ -124,7 +124,7 @@ impl CreatePaymentHandler {
       AccountMeta::new_readonly(Rent::id(), false),
     ];
 
-    let duration = (Duration::minutes(5).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
+    let duration = (Duration::minutes(10).num_milliseconds() / SOLANA_SLOT_TIME) as u64;
     let data = ReserveSeatIx {
       seat_index,
       seat_name: seat_name.clone(),

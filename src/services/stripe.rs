@@ -9,17 +9,6 @@ use stripe::{
   Client, Customer, CreateCustomer,
   Currency, CreatePaymentIntent, Metadata, CreatePaymentIntentTransferData, PaymentIntent
 };
-use common_data::{
-  helpers::{send_read},
-  models::{
-    account::Account,
-    stripe_account::{StripeAccount},
-  },
-  repositories::{
-    account::read_account,
-    stripe::read_event_organizer_stripe_account,
-  }
-};
 use ticketland_core::{
   async_helpers::timeout,
 };
@@ -154,10 +143,8 @@ pub async fn create_payment(
   ).await??;
 
   let client = Client::new(store.config.stripe_key.clone());
-  let neo4j = Arc::clone(&store.neo4j);
-  let (query, db_query_params) = read_account(buyer_uid.clone());
-  let account = send_read(Arc::clone(&neo4j), query, db_query_params).await.map(TryInto::<Account>::try_into)??;
-
+  let mut postgres = store.postgres.lock().await;
+  let account = postgres.read_account_by_id(buyer_uid.clone()).await?;
   let descr = buyer_uid.clone();
   let customer = CreateCustomer {
     description: Some(&descr),
@@ -166,9 +153,7 @@ pub async fn create_payment(
   };
 
   let customer = Customer::create(&client, customer).await?;
-
-  let (query, db_query_params) = read_event_organizer_stripe_account(event_id.clone());
-  let stripe_account = send_read(Arc::clone(&neo4j), query, db_query_params).await.map(TryInto::<StripeAccount>::try_into)??;
+  let stripe_account = postgres.read_event_organizer_stripe_account(event_id.clone()).await?;
 
   let payment_intent = {
     let mut params = CreatePaymentIntent::new(price, Currency::USD);

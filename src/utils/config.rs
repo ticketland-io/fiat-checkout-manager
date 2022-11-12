@@ -3,11 +3,7 @@ use solana_sdk::pubkey::Pubkey;
 use solana_web3_rust::utils::pubkey_from_str;
 
 pub struct Config {
-  pub neo4j_host: String,
-  pub neo4j_domain: Option<String>,
-  pub neo4j_username: String,
-  pub neo4j_password: String,
-  pub neo4j_database: Option<String>,
+  pub postgres_uri: String,
   pub rabbitmq_uri: String,
   pub retry_ttl: u16,
   pub redis_host: String,
@@ -27,11 +23,7 @@ impl Config {
   pub fn new() -> Result<Self, env::VarError> {
     Result::Ok(
       Self {
-        neo4j_host: env::var("NEO4J_HOST").unwrap(),
-        neo4j_domain: None,
-        neo4j_username: env::var("NEO4J_USERNAME").unwrap(),
-        neo4j_password: env::var("NEO4J_PASSWORD").unwrap(),
-        neo4j_database: env::var("NEO4J_DATABASE").ok(),
+        postgres_uri: env::var("POSTGRES_URI").unwrap(),
         rabbitmq_uri: env::var("RABBITMQ_URI").unwrap(),
         redis_host: env::var("REDIS_HOST").unwrap(),
         redis_password: env::var("REDIS_PASSWORD").unwrap(),
