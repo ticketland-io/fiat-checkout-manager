@@ -147,7 +147,8 @@ impl CreatePaymentHandler {
   async fn reserve_sell_listing(&self, msg: &CreatePayment) -> Result<()> {
     let (_, _, _, event_id, ticket_nft, _, recipient) = msg.secondary();
     let state = self.store.config.secondary_market_state;
-    let ticket_matadata = ticket_nft::pda::ticket_metadata(&self.store.config.ticket_nft_state, &ticket_nft).0;
+    let ticket_nft_pubkey = Pubkey::from_str(&ticket_nft)?;
+    let ticket_matadata = ticket_nft::pda::ticket_metadata(&self.store.config.ticket_nft_state, &ticket_nft_pubkey).0;
     let sell_listing = secondary_market::pda::sell_listing(&state, &event_id, &ticket_matadata,).0;
     let sell_listing_reservation_account = secondary_market::pda::sell_listing_reservation(&sell_listing).0;
     let result = self.store.rpc_client.get_anchor_account_data::<SellListingReservation>(&sell_listing_reservation_account).await;

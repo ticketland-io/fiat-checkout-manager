@@ -1,10 +1,11 @@
 use std::{
   sync::Arc,
   future::Future,
-  pin::Pin,
+  pin::Pin, str::FromStr,
 };
 use chrono::Duration;
 use eyre::{Result, Report, ContextCompat};
+use solana_sdk::pubkey::Pubkey;
 use stripe::{
   Client, Customer, CreateCustomer,
   Currency, CreatePaymentIntent, Metadata, CreatePaymentIntentTransferData, PaymentIntent
@@ -78,7 +79,8 @@ pub async fn create_secondary_sale_payment(
   ticket_type_index: u8,
   recipient: String,
 ) -> Result<String> {
-  let ticket_matadata = ticket_nft_pda::ticket_metadata(&store.config.ticket_nft_state, &ticket_nft).0;
+  let ticket_nft_pubkey = Pubkey::from_str(&ticket_nft)?;
+  let ticket_matadata = ticket_nft_pda::ticket_metadata(&store.config.ticket_nft_state, &ticket_nft_pubkey).0;
   let sell_listing_account = pda::sell_listing(
     &store.config.secondary_market_state,
     &event_id,
