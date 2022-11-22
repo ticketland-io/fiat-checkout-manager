@@ -54,6 +54,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-cors"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b340e9cfa5b08690aae90fb61beb44e9b06f44fe3d0f93781aaa58cfba86245e"
+dependencies = [
+ "actix-utils",
+ "actix-web",
+ "derive_more",
+ "futures-util",
+ "log",
+ "once_cell",
+ "smallvec",
+]
+
+[[package]]
 name = "actix-http"
 version = "3.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -415,6 +430,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "216261ddc8289130e551ddcd5ce8a064710c0d064a4d2895c67151c92b5443f6"
 
 [[package]]
+name = "api-helpers"
+version = "0.3.20"
+source = "git+https://github.com/ticketland-io/common-rust#0e654874d3b31c61911fe9fcdd3ba373187faefe"
+dependencies = [
+ "actix",
+ "actix-http",
+ "actix-web",
+ "async-trait",
+ "bolt-client",
+ "chrono",
+ "eyre",
+ "fireauth",
+ "futures-util",
+ "qstring",
+ "serde",
+ "ticketland-core",
+ "ticketland-crypto",
+ "ticketland-data",
+ "tokio",
+]
+
+[[package]]
 name = "arloader"
 version = "0.1.64"
 source = "git+https://github.com/Apocentre/arloader?branch=master#a292357ee8b5bd0d6e6143f0eab3f4854ac3fe05"
@@ -753,6 +790,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-config"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56a636c44c77fa18bdba56126a34d30cfe5538fe88f7d34988fa731fee143ddd"
+dependencies = [
+ "aws-http",
+ "aws-sdk-sso",
+ "aws-sdk-sts",
+ "aws-smithy-async",
+ "aws-smithy-client",
+ "aws-smithy-http",
+ "aws-smithy-http-tower",
+ "aws-smithy-json",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
+ "hex",
+ "http",
+ "hyper",
+ "ring",
+ "time 0.3.16",
+ "tokio",
+ "tower",
+ "tracing",
+ "zeroize",
+]
+
+[[package]]
 name = "aws-creds"
 version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -769,12 +834,269 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-endpoint"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ca8f374874f6459aaa88dc861d7f5d834ca1ff97668eae190e97266b5f6c3fb"
+dependencies = [
+ "aws-smithy-http",
+ "aws-smithy-types",
+ "aws-types",
+ "http",
+ "regex",
+ "tracing",
+]
+
+[[package]]
+name = "aws-http"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78d41e19e779b73463f5f0c21b3aacc995f4ba783ab13a7ae9f5dfb159a551b4"
+dependencies = [
+ "aws-smithy-http",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
+ "http",
+ "http-body",
+ "lazy_static",
+ "percent-encoding",
+ "pin-project-lite",
+ "tracing",
+]
+
+[[package]]
 name = "aws-region"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f92a8af5850d0ea0916ca3e015ab86951ded0bf4b70fd27896e81ae1dfb0af37"
 dependencies = [
  "thiserror",
+]
+
+[[package]]
+name = "aws-sdk-rekognition"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ffeef9bec6a715dfe5405b10395eef8f31ee8a7c3fcdd4d21152a6a61267613"
+dependencies = [
+ "aws-endpoint",
+ "aws-http",
+ "aws-sig-auth",
+ "aws-smithy-async",
+ "aws-smithy-client",
+ "aws-smithy-http",
+ "aws-smithy-http-tower",
+ "aws-smithy-json",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
+ "http",
+ "tokio-stream",
+ "tower",
+]
+
+[[package]]
+name = "aws-sdk-sso"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "86dcb1cb71aa8763b327542ead410424515cff0cde5b753eedd2917e09c63734"
+dependencies = [
+ "aws-endpoint",
+ "aws-http",
+ "aws-sig-auth",
+ "aws-smithy-async",
+ "aws-smithy-client",
+ "aws-smithy-http",
+ "aws-smithy-http-tower",
+ "aws-smithy-json",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
+ "http",
+ "tokio-stream",
+ "tower",
+]
+
+[[package]]
+name = "aws-sdk-sts"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fdfcf584297c666f6b472d5368a78de3bc714b6e0a53d7fbf76c3e347c292ab1"
+dependencies = [
+ "aws-endpoint",
+ "aws-http",
+ "aws-sig-auth",
+ "aws-smithy-async",
+ "aws-smithy-client",
+ "aws-smithy-http",
+ "aws-smithy-http-tower",
+ "aws-smithy-query",
+ "aws-smithy-types",
+ "aws-smithy-xml",
+ "aws-types",
+ "bytes",
+ "http",
+ "tower",
+]
+
+[[package]]
+name = "aws-sig-auth"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12cbe7b2be9e185c1fbce27fc9c41c66b195b32d89aa099f98768d9544221308"
+dependencies = [
+ "aws-sigv4",
+ "aws-smithy-http",
+ "aws-types",
+ "http",
+ "tracing",
+]
+
+[[package]]
+name = "aws-sigv4"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "03ff4cff8c4a101962d593ba94e72cd83891aecd423f0c6e3146bff6fb92c9e3"
+dependencies = [
+ "aws-smithy-http",
+ "form_urlencoded",
+ "hex",
+ "http",
+ "once_cell",
+ "percent-encoding",
+ "regex",
+ "ring",
+ "time 0.3.16",
+ "tracing",
+]
+
+[[package]]
+name = "aws-smithy-async"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b3442b4c5d3fc39891a2e5e625735fba6b24694887d49c6518460fde98247a9"
+dependencies = [
+ "futures-util",
+ "pin-project-lite",
+ "tokio",
+ "tokio-stream",
+]
+
+[[package]]
+name = "aws-smithy-client"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff28d553714f8f54cd921227934fc13a536a1c03f106e56b362fd57e16d450ad"
+dependencies = [
+ "aws-smithy-async",
+ "aws-smithy-http",
+ "aws-smithy-http-tower",
+ "aws-smithy-types",
+ "bytes",
+ "fastrand",
+ "http",
+ "http-body",
+ "hyper",
+ "hyper-rustls",
+ "lazy_static",
+ "pin-project-lite",
+ "tokio",
+ "tower",
+ "tracing",
+]
+
+[[package]]
+name = "aws-smithy-http"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf58ed4fefa61dbf038e5421a521cbc2c448ef69deff0ab1d915d8a10eda5664"
+dependencies = [
+ "aws-smithy-types",
+ "bytes",
+ "bytes-utils",
+ "futures-core",
+ "http",
+ "http-body",
+ "hyper",
+ "once_cell",
+ "percent-encoding",
+ "pin-project-lite",
+ "pin-utils",
+ "tokio",
+ "tokio-util 0.7.4",
+ "tracing",
+]
+
+[[package]]
+name = "aws-smithy-http-tower"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20c96d7bd35e7cf96aca1134b2f81b1b59ffe493f7c6539c051791cbbf7a42d3"
+dependencies = [
+ "aws-smithy-http",
+ "bytes",
+ "http",
+ "http-body",
+ "pin-project-lite",
+ "tower",
+ "tracing",
+]
+
+[[package]]
+name = "aws-smithy-json"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8324ba98c8a94187723cc16c37aefa09504646ee65c3d2c3af495bab5ea701b"
+dependencies = [
+ "aws-smithy-types",
+]
+
+[[package]]
+name = "aws-smithy-query"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83834ed2ff69ea6f6657baf205267dc2c0abe940703503a3e5d60ce23be3d306"
+dependencies = [
+ "aws-smithy-types",
+ "urlencoding",
+]
+
+[[package]]
+name = "aws-smithy-types"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b02e06ea63498c43bc0217ea4d16605d4e58d85c12fc23f6572ff6d0a840c61"
+dependencies = [
+ "itoa",
+ "num-integer",
+ "ryu",
+ "time 0.3.16",
+]
+
+[[package]]
+name = "aws-smithy-xml"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "246e9f83dd1fdf5d347fa30ae4ad30a9d1d42ce4cd74a93d94afa874646f94cd"
+dependencies = [
+ "xmlparser",
+]
+
+[[package]]
+name = "aws-types"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05701d32da168b44f7ee63147781aed8723e792cc131cb9b18363b5393f17f70"
+dependencies = [
+ "aws-smithy-async",
+ "aws-smithy-client",
+ "aws-smithy-http",
+ "aws-smithy-types",
+ "http",
+ "rustc_version",
+ "tracing",
+ "zeroize",
 ]
 
 [[package]]
@@ -1057,6 +1379,16 @@ name = "bytes"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec8a7b6a70fde80372154c65702f00a0f56f3e1c36abbc6c440484be248856db"
+
+[[package]]
+name = "bytes-utils"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e47d3a8076e283f3acd27400535992edb3ba4b5bb72f8891ad8fbe7932a7d4b9"
+dependencies = [
+ "bytes",
+ "either",
+]
 
 [[package]]
 name = "bytestring"
@@ -1777,6 +2109,7 @@ version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e9c280362032ea4203659fc489832d0204ef09f247a0506f170dafcac08c369"
 dependencies = [
+ "serde",
  "signature",
 ]
 
@@ -1790,6 +2123,7 @@ dependencies = [
  "ed25519",
  "rand 0.7.3",
  "serde",
+ "serde_bytes",
  "sha2 0.9.9",
  "zeroize",
 ]
@@ -1920,7 +2254,7 @@ checksum = "835a3dc7d1ec9e75e2b5fb4ba75396837112d2060b03f7d43bc1897c7f7211da"
 
 [[package]]
 name = "fiat-checkout-manager"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "actix",
  "actix-rt",
@@ -1938,12 +2272,24 @@ dependencies = [
  "solana-client",
  "solana-sdk",
  "solana-web3-rust",
+ "ticketland-api",
  "ticketland-core",
  "ticketland-data",
  "ticketland-event-handler",
  "tokio",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "fireauth"
+version = "0.1.6"
+source = "git+https://github.com/Apocentre/fireauth#60c6c42ce02e56edc49e8b69c539f9a7bbca8e75"
+dependencies = [
+ "chrono",
+ "reqwest",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -2385,7 +2731,9 @@ checksum = "d87c48c02e0dc5e3b849a2041db3029fd066650f8f717c07bf8ed78ccb895cac"
 dependencies = [
  "http",
  "hyper",
+ "log",
  "rustls",
+ "rustls-native-certs",
  "tokio",
  "tokio-rustls",
 ]
@@ -3665,8 +4013,8 @@ dependencies = [
 
 [[package]]
 name = "program-artifacts"
-version = "0.1.32"
-source = "git+https://github.com/ticketland-io/program-artifacts#d6290e055b5d4326f2baa02110031419b58f4106"
+version = "0.1.35"
+source = "git+https://github.com/ticketland-io/program-artifacts#f0c80619af588f94cb2c31cc39550b18f1316357"
 dependencies = [
  "borsh",
  "eyre",
@@ -5488,9 +5836,80 @@ dependencies = [
 ]
 
 [[package]]
+name = "ticket-verification"
+version = "0.1.14"
+source = "git+https://github.com/ticketland-io/common-rust#0e654874d3b31c61911fe9fcdd3ba373187faefe"
+dependencies = [
+ "borsh",
+ "bs58",
+ "chrono",
+ "eyre",
+ "program-artifacts",
+ "serde",
+ "solana-sdk",
+ "solana-web3-rust",
+ "thiserror",
+ "ticketland-core",
+ "ticketland-crypto",
+ "ticketland-data",
+ "tokio",
+]
+
+[[package]]
+name = "ticketland-ai"
+version = "0.1.3"
+source = "git+https://github.com/ticketland-io/ticketland-ai#5bda7378542b2a7537e29a0c3e6b43c2df70a1b1"
+dependencies = [
+ "aws-config",
+ "aws-sdk-rekognition",
+ "aws-smithy-types",
+ "aws-types",
+ "eyre",
+]
+
+[[package]]
+name = "ticketland-api"
+version = "0.1.1"
+source = "git+https://github.com/ticketland-io/ticketland-api#e2e61d97076b7a78ba8c9b9be428d579da34b278"
+dependencies = [
+ "actix",
+ "actix-cors",
+ "actix-multipart",
+ "actix-rt",
+ "actix-web",
+ "amqp-helpers",
+ "api-helpers",
+ "async-stripe",
+ "borsh",
+ "bytes",
+ "chrono",
+ "dotenv",
+ "env_logger",
+ "eyre",
+ "futures",
+ "futures-util",
+ "mime",
+ "price-feed",
+ "program-artifacts",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "solana-client",
+ "solana-sdk",
+ "solana-web3-rust",
+ "ticket-verification",
+ "ticketland-ai",
+ "ticketland-core",
+ "ticketland-data",
+ "ticketland-event-handler",
+ "tokio",
+ "tokio-util 0.7.4",
+]
+
+[[package]]
 name = "ticketland-core"
 version = "0.2.15"
-source = "git+https://github.com/ticketland-io/common-rust#1f24a47e2eca73fe26a0846a6eeaf370e2ded715"
+source = "git+https://github.com/ticketland-io/common-rust#0e654874d3b31c61911fe9fcdd3ba373187faefe"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -5519,9 +5938,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "ticketland-crypto"
+version = "0.1.15"
+source = "git+https://github.com/ticketland-io/common-rust#0e654874d3b31c61911fe9fcdd3ba373187faefe"
+dependencies = [
+ "base64 0.13.1",
+ "bs58",
+ "ed25519-dalek",
+ "eyre",
+ "hex",
+ "rand 0.7.3",
+ "ring",
+ "serde",
+ "serde_json",
+ "solana-sdk",
+ "uuid 1.2.1",
+]
+
+[[package]]
 name = "ticketland-data"
-version = "0.1.24"
-source = "git+https://github.com/ticketland-io/common-rust#1f24a47e2eca73fe26a0846a6eeaf370e2ded715"
+version = "0.1.29"
+source = "git+https://github.com/ticketland-io/common-rust#0e654874d3b31c61911fe9fcdd3ba373187faefe"
 dependencies = [
  "chrono",
  "diesel",
@@ -5536,8 +5973,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.16"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#ac4e8e7bef45470e03491829ef8252e0725f4fe3"
+version = "0.1.17"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#ab43f0487253a31493fd928b4b9e8f414db4bcb8"
 dependencies = [
  "actix",
  "actix-rt",
@@ -5569,7 +6006,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#1f24a47e2eca73fe26a0846a6eeaf370e2ded715"
+source = "git+https://github.com/ticketland-io/common-rust#0e654874d3b31c61911fe9fcdd3ba373187faefe"
 dependencies = [
  "lazy_static",
 ]
@@ -5826,6 +6263,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "tower"
+version = "0.4.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8fa9be0de6cf49e536ce1851f987bd21a43b771b09473c3549a6c853db37c1c"
+dependencies = [
+ "futures-core",
+ "futures-util",
+ "pin-project",
+ "pin-project-lite",
+ "tokio",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "tower-layer"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c20c8dbed6283a09604c3e69b4b7eeb54e298b8a600d4d5ecb5ad39de609f1d0"
+
+[[package]]
 name = "tower-service"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6065,6 +6524,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "urlencoding"
+version = "2.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8db7427f936968176eaa7cdf81b7f98b980b18495ec28f1b5791ac3bfe3eea9"
+
+[[package]]
 name = "utf-8"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6085,6 +6550,10 @@ name = "uuid"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "feb41e78f93363bb2df8b0e86a2ca30eed7806ea16ea0c790d757cf93f79be83"
+dependencies = [
+ "getrandom 0.2.8",
+ "rand 0.8.5",
+]
 
 [[package]]
 name = "valuable"
@@ -6438,6 +6907,12 @@ name = "xml-rs"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"
+
+[[package]]
+name = "xmlparser"
+version = "0.13.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d25c75bf9ea12c4040a97f829154768bbbce366287e2dc044af160cd79a13fd"
 
 [[package]]
 name = "yaml-rust"
