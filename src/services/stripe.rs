@@ -3,16 +3,17 @@ use std::{
   future::Future,
   pin::Pin, str::FromStr,
 };
-use chrono::Duration;
+use chrono::{Duration, NaiveDateTime};
 use eyre::{Result, Report, ContextCompat};
 use solana_sdk::pubkey::Pubkey;
 use stripe::{
   Client, Customer, CreateCustomer,
-  Currency, CreatePaymentIntent, Metadata, CreatePaymentIntentTransferData, PaymentIntent
+  Currency, CreatePaymentIntent, Metadata, CreatePaymentIntentTransferData, PaymentIntent, CustomerId
 };
 use ticketland_core::{
   async_helpers::timeout,
 };
+use ticketland_data::models::stripe_customer::StripeCustomer;
 use ticketland_event_handler::{
   services::ticket_purchase::pending_ticket_key,
 };
@@ -146,20 +147,35 @@ pub async fn create_payment(
 
   let client = Client::new(store.config.stripe_key.clone());
   let mut postgres = store.postgres.lock().await;
+  
   let account = postgres.read_account_by_id(buyer_uid.clone()).await?;
-  let descr = buyer_uid.clone();
-  let customer = CreateCustomer {
-    description: Some(&descr),
-    email: account.email.as_ref().map(String::as_str),
-    ..Default::default()
+
+  let Ok(customer) = postgres.read_customer_by_account_id(buyer_uid.clone()).await else {
+    let descr = buyer_uid.clone();
+    let customer = CreateCustomer {
+      description: Some(&descr),
+      email: account.email.as_ref().map(String::as_str),
+      ..Default::default()
+    };
+
+    let customer = Customer::create(&client, customer).await?;
+    let stripe_account = postgres.read_stripe_account(buyer_uid.clone()).await?;
+    let stripe_customer = StripeCustomer {
+      customer_uid: customer.id.to_string(),
+      created_at: customer.created.map(|secs| Some(NaiveDateTime::from_timestamp(secs, 0))),
+      stripe_uid: stripe_account.stripe_uid,
+    };
+
+    postgres.upsert_stripe_customer(stripe_customer.clone()).await?;
+
+    stripe_customer
   };
 
-  let customer = Customer::create(&client, customer).await?;
   let stripe_account = postgres.read_event_organizer_stripe_account(event_id.clone()).await?;
 
   let payment_intent = {
     let mut params = CreatePaymentIntent::new(price, Currency::USD);
-    params.customer = Some(customer.id);
+    params.customer = CustomerId::from_str(&customer.customer_uid).ok();
     params.application_fee_amount = Some(fee);
     params.transfer_data = Some(CreatePaymentIntentTransferData {
       destination: stripe_account.stripe_uid,
