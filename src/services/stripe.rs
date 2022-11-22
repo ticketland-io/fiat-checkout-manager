@@ -150,25 +150,28 @@ pub async fn create_payment(
   
   let account = postgres.read_account_by_id(buyer_uid.clone()).await?;
 
-  let Ok(customer) = postgres.read_customer_by_account_id(buyer_uid.clone()).await else {
-    let descr = buyer_uid.clone();
-    let customer = CreateCustomer {
-      description: Some(&descr),
-      email: account.email.as_ref().map(String::as_str),
-      ..Default::default()
-    };
+  let customer = match postgres.read_customer_by_account_id(buyer_uid.clone()).await {
+    Ok(customer) => customer,
+    Err(_) => {
+      let descr = buyer_uid.clone();
+      let customer = CreateCustomer {
+        description: Some(&descr),
+        email: account.email.as_ref().map(String::as_str),
+        ..Default::default()
+      };
 
-    let customer = Customer::create(&client, customer).await?;
-    let stripe_account = postgres.read_stripe_account(buyer_uid.clone()).await?;
-    let stripe_customer = StripeCustomer {
-      customer_uid: customer.id.to_string(),
-      created_at: customer.created.map(|secs| Some(NaiveDateTime::from_timestamp(secs, 0))),
-      stripe_uid: stripe_account.stripe_uid,
-    };
+      let customer = Customer::create(&client, customer).await?;
+      let stripe_account = postgres.read_stripe_account(buyer_uid.clone()).await?;
+      let stripe_customer = StripeCustomer {
+        customer_uid: customer.id.to_string(),
+        created_at: customer.created.map(|secs| NaiveDateTime::from_timestamp(secs, 0)),
+        stripe_uid: stripe_account.stripe_uid,
+      };
 
-    postgres.upsert_stripe_customer(stripe_customer.clone()).await?;
+      postgres.upsert_stripe_customer(stripe_customer.clone()).await?;
 
-    stripe_customer
+      stripe_customer
+    }
   };
 
   let stripe_account = postgres.read_event_organizer_stripe_account(event_id.clone()).await?;
