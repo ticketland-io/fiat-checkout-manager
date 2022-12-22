@@ -7,7 +7,7 @@ use crate::utils::store::Store;
 const STRIPE_UNIT: f64 = 100.0;
 
 pub async fn get_sol_price(store: Arc<Store>,) -> Result<i64> {
-  let mut redis = store.redis.lock().await;
+  let mut redis = store.redis_pool.connection().await?;
   let price = redis.get(&get_price_key("solana"))
   .await?
   .parse::<f64>()?;

@@ -1,10 +1,8 @@
 use std::sync::Arc;
-use tokio::sync::Mutex;
-use ticketland_data::connection::PostgresConnection;
+use ticketland_data::connection_pool::ConnectionPool;
 use ticketland_core::{
   services::{
-    redis::Redis,
-    redlock::RedLock,
+    redis, redlock::RedLock,
   },
 };
 use solana_web3_rust::rpc_client::RpcClient;
@@ -13,8 +11,8 @@ use crate::queue::payment_producer::PaymentProducer;
 
 pub struct Store {
   pub config: Config,
-  pub postgres: Arc<Mutex<PostgresConnection>>,
-  pub redis: Arc<Mutex<Redis>>,
+  pub pg_pool: ConnectionPool,
+  pub redis_pool: redis::ConnectionPool,
   pub redlock: Arc<RedLock>,
   pub rpc_client: Arc<RpcClient>,
   pub payment_producer: PaymentProducer,
@@ -23,8 +21,8 @@ pub struct Store {
 impl Store {
   pub async fn new() -> Self {
     let config = Config::new().unwrap();
-    let postgres = Arc::new(Mutex::new(PostgresConnection::new(&config.postgres_uri).await));
-    let redis = Arc::new(Mutex::new(Redis::new(&config.redis_host, &config.redis_password).await.unwrap()));
+    let pg_pool = ConnectionPool::new(&config.postgres_uri).await;
+    let redis_pool = redis::ConnectionPool::new(&config.redis_host, &config.redis_password, config.redis_port);
     let redlock = Arc::new(RedLock::new(vec![&config.redis_host], &config.redis_password));
     let rpc_client = Arc::new(RpcClient::new(config.rpc_endpoint.clone(), Some(config.operator_priv_key.clone())));
 
@@ -35,8 +33,8 @@ impl Store {
 
     Self {
       config,
-      postgres,
-      redis,
+      pg_pool,
+      redis_pool,
       redlock,
       rpc_client,
       payment_producer,

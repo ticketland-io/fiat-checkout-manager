@@ -133,7 +133,7 @@ pub async fn create_payment(
   // mint tx to the blockchain.
   let redis_key = pending_ticket_key(&event_id, &ticket_nft);
   {
-    let mut redis = store.redis.lock().await;
+    let mut redis = store.redis_pool.connection().await?;
     if let Ok(_) = redis.get(&redis_key).await {
       return Err(Report::msg("Ticket not available"))
     }
@@ -145,7 +145,7 @@ pub async fn create_payment(
   ).await??;
 
   let client = Client::new(store.config.stripe_key.clone());
-  let mut postgres = store.postgres.lock().await;
+  let mut postgres = store.pg_pool.connection().await?;
   let account = postgres.read_account_by_id(buyer_uid.clone()).await?;
   let descr = buyer_uid.clone();
   let customer = CreateCustomer {
@@ -180,7 +180,7 @@ pub async fn create_payment(
   // user calls this function at the same time at which point the ticket will not be minted nor the record
   // will be in Redis because it expired and because the payment webhook has not be called yet to insert the
   // entry again into Redis.
-  let mut redis = store.redis.lock().await;
+  let mut redis = store.redis_pool.connection().await?;
   timeout(
     Duration::seconds(2).num_milliseconds() as u64,
     redis.set_ex(&redis_key, &"1", Duration::minutes(6).num_milliseconds() as usize),
