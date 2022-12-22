@@ -3,6 +3,7 @@ use std::{
   str::FromStr,
 };
 use eyre::{Result, ContextCompat};
+use ticketland_api::services::ticket_availability::get_next_seat_index;
 use tracing::info;
 use chrono::Duration;
 use amqp_helpers::core::types::Handler;
@@ -26,12 +27,13 @@ use program_artifacts::{
     instruction::ReserveSeatIx,
     account_data::SeatReservation
   },
-  ticket_nft,
+  ticket_nft::pda as ticket_nft_pda,
   secondary_market::{
     self,
     instruction::ReserveSellListingIx,
     account_data::SellListingReservation,
   },
+  event_registry::account_data::EventId,
 };
 use crate::{
   models::{
@@ -64,13 +66,13 @@ impl CreatePaymentHandler {
     }
   }
 
-  async fn reserve_seat(&self, msg: &CreatePayment) -> Result<()> {
-    let (_, _, sale_account, event_id, _, _, recipient, seat_index, seat_name) = msg.primary();
-    
+  async fn reserve_seat(&self, msg: &CreatePayment, seat_index: u32, seat_name: String,) -> Result<()> {
+    let (_, _, sale_account, event_id, _, recipient) = msg.primary();
+
     let sale = Pubkey::from_str(&sale_account)?;
     let seat_reservation_account = ticket_sale::pda::seat_reservation(&sale, seat_index, &seat_name.to_string()).0;
     let result = self.store.rpc_client.get_anchor_account_data::<SeatReservation>(&seat_reservation_account).await;
-    
+
     // Fails if the account does not exist
     if result.is_err() {
       return self.send_reserve_seat_tx(
@@ -87,7 +89,7 @@ impl CreatePaymentHandler {
     let latest_slot = self.store.rpc_client.get_slot().await?;
 
     // Ignore if it has expired. Note id recipient is the same recipient as the one we're processing this message for
-    // we should still send the reserve seat as this might be a new request for a payment link so we need to 
+    // we should still send the reserve seat as this might be a new request for a payment link so we need to
     // update the duration of the reservation which will happen in the reserve_seat Ix.
     if latest_slot > seat_reservation.valid_until {
       return Ok(())
@@ -131,7 +133,7 @@ impl CreatePaymentHandler {
       duration,
       recipient: pubkey_from_str(&recipient)?,
     }.data();
-    
+
     let ix = Instruction {
       program_id: ticket_sale::program_id(),
       accounts,
@@ -148,11 +150,11 @@ impl CreatePaymentHandler {
     let (_, _, _, event_id, ticket_nft, _, recipient) = msg.secondary();
     let state = self.store.config.secondary_market_state;
     let ticket_nft_pubkey = Pubkey::from_str(&ticket_nft)?;
-    let ticket_matadata = ticket_nft::pda::ticket_metadata(&self.store.config.ticket_nft_state, &ticket_nft_pubkey).0;
+    let ticket_matadata = ticket_nft_pda::ticket_metadata(&self.store.config.ticket_nft_state, &ticket_nft_pubkey).0;
     let sell_listing = secondary_market::pda::sell_listing(&state, &event_id, &ticket_matadata,).0;
     let sell_listing_reservation_account = secondary_market::pda::sell_listing_reservation(&sell_listing).0;
     let result = self.store.rpc_client.get_anchor_account_data::<SellListingReservation>(&sell_listing_reservation_account).await;
-    
+
     // Fails if the account does not exist
     if result.is_err() {
       return self.send_reserve_sell_listing_tx(
@@ -167,9 +169,10 @@ impl CreatePaymentHandler {
     let latest_slot = self.store.rpc_client.get_slot().await?;
 
     // Ignore if it has expired. Note id recipient is the same recipient as the one we're processing this message for
-    // we should still send the reserve seat as this might be a new request for a payment link so we need to 
+    // we should still send the reserve seat as this might be a new request for a payment link so we need to
     // upadte the duration of the reservation which will happen in the reserve_seat Ix.
-    if latest_slot > sell_listing_reservation.valid_until {
+    let recipient = pubkey_from_str(recipient)?;
+    if latest_slot > sell_listing_reservation.valid_until && sell_listing_reservation.recipient != recipient {
       return Ok(())
     }
 
@@ -206,7 +209,7 @@ impl CreatePaymentHandler {
       duration,
       recipient: pubkey_from_str(&recipient)?,
     }.data();
-    
+
     let ix = Instruction {
       program_id: secondary_market::program_id(),
       accounts,
@@ -218,8 +221,8 @@ impl CreatePaymentHandler {
     .map(|tx_hash| println!("Reserved sell listing {} for event {}: {:?}", &sell_listing, &event_id, tx_hash))
   }
 
-  async fn create_primary_payment(&self, msg: &CreatePayment) -> Result<String> {
-    let (_, buyer_uid, sale_account, event_id, ticket_nft, ticket_type_index, recipient, seat_index, seat_name) = msg.primary();
+  async fn create_primary_payment(&self, msg: &CreatePayment, seat_index: u32, seat_name: String, ticket_nft: &Pubkey) -> Result<String> {
+    let (_, buyer_uid, sale_account, event_id, ticket_type_index, recipient) = msg.primary();
 
     Ok(
       create_primary_sale_payment(
@@ -231,7 +234,7 @@ impl CreatePaymentHandler {
         ticket_type_index,
         recipient.to_string(),
         seat_index,
-        seat_name.to_string(),
+        seat_name,
       ).await?
     )
   }
@@ -258,16 +261,34 @@ impl Handler<CreatePayment> for CreatePaymentHandler {
   async fn handle(&self, msg: CreatePayment, _: &Delivery) -> Result<()> {
     let (ws_session_id, payment_secret) = match msg {
       CreatePayment::Primary {..} => {
-        let (ws_session_id, buyer_uid, _, event_id, ticket_nft, _, _, seat_index, seat_name) = msg.primary();
+        let (ws_session_id, buyer_uid, _, event_id, ticket_type_index, _,) = msg.primary();
+
+        let seat_index = get_next_seat_index(
+          Arc::clone(&self.store.postgres),
+          Arc::clone(&self.store.redis),
+          Arc::clone(&self.store.rpc_client),
+          self.store.config.ticket_sale_state,
+          &EventId(event_id.to_string()),
+          ticket_type_index
+        ).await?;
+        let seat_name = seat_index.to_string();
+
+        let ticket_nft = ticket_nft_pda::ticket_nft(
+          &self.store.config.ticket_nft_state,
+          seat_index,
+          &EventId(event_id.to_string()).val(),
+          ticket_type_index,
+        )
+        .0;
         info!("Creating new payment for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
 
-        with_retry(None, None, || self.reserve_seat(&msg)).await
+        with_retry(None, None, || self.reserve_seat(&msg, seat_index, seat_name.clone())).await
         .map_err(|error| {
           println!("Failed to reserve seat {:?}:{:?} for event {}: {:?}", seat_index, seat_name, event_id, error);
           error
         })?;
-        
-        match self.create_primary_payment(&msg).await {
+
+        match self.create_primary_payment(&msg, seat_index, seat_name.clone(), &ticket_nft).await {
           Ok(payment_secret) => Ok((ws_session_id, PaymentSecret::Ok(payment_secret))),
           Err(error) => {
             // we don't want to nack if the ticket is unavailable. Instead we need to ack and
@@ -275,6 +296,7 @@ impl Handler<CreatePayment> for CreatePaymentHandler {
             if is_custom_error(&error.to_string()) {
               Ok((ws_session_id, PaymentSecret::Err(error.to_string())))
             } else {
+              println!("{:?}", error);
               Err(error)
             }
           }
@@ -283,13 +305,13 @@ impl Handler<CreatePayment> for CreatePaymentHandler {
       CreatePayment::Secondary {..} => {
         let (ws_session_id, buyer_uid, _, event_id, ticket_nft, _, _) = msg.secondary();
         info!("Creating new secondary payment for user {} and ticket {} from event {}", buyer_uid, ticket_nft, event_id);
-        
+
         with_retry(None, None, || self.reserve_sell_listing(&msg)).await
         .map_err(|error| {
           println!("Failed to reserve sell listing for ticket_nft {} and event {}: {:?}",  ticket_nft, event_id, error);
           error
         })?;
-      
+
         match self.create_secondary_sale_payment(&msg).await {
           Ok(payment_secret) => Ok((ws_session_id, PaymentSecret::Ok(payment_secret))),
           Err(error) => {
@@ -302,7 +324,7 @@ impl Handler<CreatePayment> for CreatePaymentHandler {
         }?
       }
     };
-    
+
     self.store.payment_producer.new_payment(PaymentIntent {
       ws_session_id: ws_session_id.to_string(),
       payment_secret,
