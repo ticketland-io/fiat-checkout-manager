@@ -264,8 +264,8 @@ impl Handler<CreatePayment> for CreatePaymentHandler {
         let (ws_session_id, buyer_uid, _, event_id, ticket_type_index, _,) = msg.primary();
 
         let seat_index = get_next_seat_index(
-          Arc::clone(&self.store.postgres),
-          Arc::clone(&self.store.redis),
+          &self.store.pg_pool,
+          &self.store.redis_pool,
           Arc::clone(&self.store.rpc_client),
           self.store.config.ticket_sale_state,
           &EventId(event_id.to_string()),
