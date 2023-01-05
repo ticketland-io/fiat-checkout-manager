@@ -33,7 +33,7 @@ dependencies = [
  "pin-project-lite",
  "smallvec",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
 ]
 
 [[package]]
@@ -50,7 +50,7 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
 ]
 
 [[package]]
@@ -393,8 +393,8 @@ dependencies = [
 
 [[package]]
 name = "amqp-helpers"
-version = "0.1.9"
-source = "git+https://github.com/ticketland-io/amqp-helpers#421cc083057772a43e0bd5bdd8dc4f4b34ae7a5c"
+version = "0.1.10"
+source = "git+https://github.com/ticketland-io/amqp-helpers#1a45e2ac562923754e1b3519529ffc573c77479d"
 dependencies = [
  "async-trait",
  "borsh",
@@ -432,7 +432,7 @@ checksum = "2cb2f989d18dd141ab8ae82f64d1a8cdd37e0840f73a406896cf5e99502fab61"
 [[package]]
 name = "api-helpers"
 version = "0.3.20"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+source = "git+https://github.com/ticketland-io/common-rust#e7b3880dea179d91118d6639c8573a5289e887bf"
 dependencies = [
  "actix",
  "actix-http",
@@ -1024,7 +1024,7 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
  "tracing",
 ]
 
@@ -1122,6 +1122,18 @@ name = "base64ct"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b645a089122eccb6111b4f81cbc1a49f5900ac4666bb93ac027feaecf15607bf"
+
+[[package]]
+name = "bigdecimal"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6aaf33151a6429fe9211d1b276eafdf70cdff28b071e76c0b0e1503221ea3744"
+dependencies = [
+ "num-bigint 0.4.3",
+ "num-integer",
+ "num-traits",
+ "serde",
+]
 
 [[package]]
 name = "bincode"
@@ -1568,7 +1580,7 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
 ]
 
 [[package]]
@@ -1598,16 +1610,15 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.15.2"
+version = "0.15.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c050367d967ced717c04b65d8c619d863ef9292ce0c5760028655a2fb298718c"
+checksum = "c9b6515d269224923b26b5febea2ed42b2d5f2ce37284a4dd670fedd6cb8347a"
 dependencies = [
  "encode_unicode",
  "lazy_static",
  "libc",
- "terminal_size",
  "unicode-width",
- "winapi",
+ "windows-sys 0.42.0",
 ]
 
 [[package]]
@@ -1680,6 +1691,15 @@ name = "core-foundation-sys"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5827cebf4670468b8772dd191856768aedcb1b0278a04f989f7766351917b9dc"
+
+[[package]]
+name = "core2"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b49ba7ef1ad6107f8824dbe97de947cbaac53c44e7f9756a1fba0d37c1eec505"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "cpufeatures"
@@ -1971,11 +1991,15 @@ version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68c186a7418a2aac330bb76cde82f16c36b03a66fb91db32d20214311f9f6545"
 dependencies = [
+ "bigdecimal",
  "bitflags",
  "byteorder",
  "chrono",
  "diesel_derives",
  "itoa",
+ "num-bigint 0.4.3",
+ "num-integer",
+ "num-traits",
  "pq-sys",
 ]
 
@@ -2217,9 +2241,9 @@ dependencies = [
 
 [[package]]
 name = "enum_dispatch"
-version = "0.3.8"
+version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0eb359f1476bf611266ac1f5355bc14aeca37b299d0ebccc038ee7058891c9cb"
+checksum = "1693044dcf452888dd3a6a6a0dab67f0652094e3920dfe029a54d2f37d9b7394"
 dependencies = [
  "once_cell",
  "proc-macro2 1.0.49",
@@ -2288,7 +2312,7 @@ checksum = "835a3dc7d1ec9e75e2b5fb4ba75396837112d2060b03f7d43bc1897c7f7211da"
 
 [[package]]
 name = "fiat-checkout-manager"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "actix",
  "actix-rt",
@@ -2571,7 +2595,7 @@ dependencies = [
  "indexmap",
  "slab",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
  "tracing",
 ]
 
@@ -2939,10 +2963,11 @@ dependencies = [
 
 [[package]]
 name = "ipfs-api-backend-hyper"
-version = "0.5.0"
-source = "git+https://github.com/ferristseng/rust-ipfs-api/#d2b88b2616c67c187efb98a8ac5b570dc14f6ca4"
+version = "0.6.0"
+source = "git+https://github.com/ferristseng/rust-ipfs-api/#33e0149b4f428d49a84298c673a3d6ffbe8c30d3"
 dependencies = [
  "async-trait",
+ "base64 0.13.1",
  "bytes",
  "futures",
  "http",
@@ -2954,8 +2979,8 @@ dependencies = [
 
 [[package]]
 name = "ipfs-api-prelude"
-version = "0.5.0"
-source = "git+https://github.com/ferristseng/rust-ipfs-api/#d2b88b2616c67c187efb98a8ac5b570dc14f6ca4"
+version = "0.6.0"
+source = "git+https://github.com/ferristseng/rust-ipfs-api/#33e0149b4f428d49a84298c673a3d6ffbe8c30d3"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2964,14 +2989,14 @@ dependencies = [
  "dirs",
  "futures",
  "http",
+ "multiaddr",
  "multibase",
- "parity-multiaddr",
  "serde",
  "serde_json",
  "serde_urlencoded",
  "thiserror",
  "tokio",
- "tokio-util 0.6.10",
+ "tokio-util",
  "tracing",
  "walkdir",
 ]
@@ -3404,6 +3429,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "multiaddr"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b53e0cc5907a5c216ba6584bf74be8ab47d6d6289f72793b2dddbf15dc3bf8c"
+dependencies = [
+ "arrayref",
+ "byteorder",
+ "data-encoding",
+ "multibase",
+ "multihash",
+ "percent-encoding",
+ "serde",
+ "static_assertions",
+ "unsigned-varint",
+ "url",
+]
+
+[[package]]
 name = "multibase"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3416,22 +3459,22 @@ dependencies = [
 
 [[package]]
 name = "multihash"
-version = "0.13.2"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4dac63698b887d2d929306ea48b63760431ff8a24fac40ddb22f9c7f49fb7cab"
+checksum = "835d6ff01d610179fbce3de1694d007e500bf33a7f29689838941d6bf783ae40"
 dependencies = [
- "generic-array",
+ "core2",
  "multihash-derive",
- "unsigned-varint 0.5.1",
+ "unsigned-varint",
 ]
 
 [[package]]
 name = "multihash-derive"
-version = "0.7.2"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "424f6e86263cd5294cbd7f1e95746b95aca0e0d66bff31e5a40d6baa87b4aa99"
+checksum = "1d6d4752e6230d8ef7adf7bd5d8c4b1f6561c1014c5ba9a37445ccefe18aa1db"
 dependencies = [
- "proc-macro-crate 1.2.1",
+ "proc-macro-crate 1.1.3",
  "proc-macro-error",
  "proc-macro2 1.0.49",
  "quote 1.0.23",
@@ -3471,9 +3514,9 @@ dependencies = [
 
 [[package]]
 name = "nom"
-version = "7.1.1"
+version = "7.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8903e5a29a317527874d0402f867152a3d21c908bb0b933e416c65e301d4c36"
+checksum = "e5507769c4919c998e69e49c839d9dc6e693ede4cc4290d6ad8b41d4f09c548c"
 dependencies = [
  "memchr",
  "minimal-lexical",
@@ -3614,7 +3657,7 @@ version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b0498641e53dd6ac1a4f22547548caa6864cc4933784319cd1775271c5a46ce"
 dependencies = [
- "proc-macro-crate 1.2.1",
+ "proc-macro-crate 1.1.3",
  "proc-macro2 1.0.49",
  "quote 1.0.23",
  "syn 1.0.107",
@@ -3637,9 +3680,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.16.0"
+version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
+checksum = "6f61fba1741ea2b3d6a1e3178721804bb716a68a6aeba1149b5d52e3d464ea66"
 
 [[package]]
 name = "opaque-debug"
@@ -3729,24 +3772,6 @@ dependencies = [
  "rc2",
  "sha1 0.10.5",
  "yasna 0.5.1",
-]
-
-[[package]]
-name = "parity-multiaddr"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58341485071825827b7f03cf7efd1cb21e6a709bea778fb50227fd45d2f361b4"
-dependencies = [
- "arrayref",
- "bs58",
- "byteorder",
- "data-encoding",
- "multihash",
- "percent-encoding",
- "serde",
- "static_assertions",
- "unsigned-varint 0.7.1",
- "url",
 ]
 
 [[package]]
@@ -4037,11 +4062,10 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-crate"
-version = "1.2.1"
+version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eda0fc3b0fb7c975631757e14d9049da17374063edb6ebbcbc54d880d4fe94e9"
+checksum = "e17d47ce914bf4de440332250b0edd23ce48c005f59fab39d3335866b114f11a"
 dependencies = [
- "once_cell",
  "thiserror",
  "toml",
 ]
@@ -4330,7 +4354,7 @@ dependencies = [
  "ryu",
  "sha1 0.6.1",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
  "url",
 ]
 
@@ -4350,7 +4374,7 @@ dependencies = [
  "ryu",
  "sha1_smol",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
  "url",
 ]
 
@@ -4447,7 +4471,7 @@ dependencies = [
  "tokio",
  "tokio-native-tls",
  "tokio-rustls",
- "tokio-util 0.7.4",
+ "tokio-util",
  "tower-service",
  "url",
  "wasm-bindgen",
@@ -4677,9 +4701,9 @@ dependencies = [
 
 [[package]]
 name = "scoped-futures"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "655305227172f0178a34e02386c3b72e9c0d247a3b5087442540dbeb74c95c9a"
+checksum = "b1473e24c637950c9bd38763220bea91ec3e095a89f672bbd7a10d03e77ba467"
 dependencies = [
  "cfg-if",
  "pin-utils",
@@ -4738,9 +4762,9 @@ checksum = "58bc9567378fc7690d6b2addae4e60ac2eeea07becb2c64b9f218b53865cba2a"
 
 [[package]]
 name = "serde"
-version = "1.0.151"
+version = "1.0.152"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97fed41fc1a24994d044e6db6935e69511a1153b52c15eb42493b26fa87feba0"
+checksum = "bb7d1f0d3021d347a83e556fc4683dea2ea09d87bccdf88ff5c12545d89d5efb"
 dependencies = [
  "serde_derive",
 ]
@@ -4779,9 +4803,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.151"
+version = "1.0.152"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "255abe9a125a985c05190d687b320c12f9b1f0b99445e608c21ba0782c719ad8"
+checksum = "af487d118eecd09402d70a5d72551860e788df87b464af30e5ea6a38c75c541e"
 dependencies = [
  "proc-macro2 1.0.49",
  "quote 1.0.23",
@@ -5873,16 +5897,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "terminal_size"
-version = "0.1.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "633c1a546cee861a1a6d0dc69ebeca693bf4296661ba7852b9d21d159e0506df"
-dependencies = [
- "libc",
- "winapi",
-]
-
-[[package]]
 name = "textwrap"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5928,8 +5942,8 @@ dependencies = [
 
 [[package]]
 name = "ticket-verification"
-version = "0.1.15"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+version = "0.1.16"
+source = "git+https://github.com/ticketland-io/common-rust#e7b3880dea179d91118d6639c8573a5289e887bf"
 dependencies = [
  "borsh",
  "bs58",
@@ -5961,7 +5975,7 @@ dependencies = [
 [[package]]
 name = "ticketland-api"
 version = "0.1.2"
-source = "git+https://github.com/ticketland-io/ticketland-api#8b0300f6a72741a98815b3311d0bbc29d28935f2"
+source = "git+https://github.com/ticketland-io/ticketland-api#2d73d18ddfa1797e7fdd8c2f40b61e8f1c033a1d"
 dependencies = [
  "actix",
  "actix-cors",
@@ -5993,13 +6007,13 @@ dependencies = [
  "ticketland-data",
  "ticketland-event-handler",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
 ]
 
 [[package]]
 name = "ticketland-core"
 version = "0.2.17"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+source = "git+https://github.com/ticketland-io/common-rust#e7b3880dea179d91118d6639c8573a5289e887bf"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -6024,14 +6038,14 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-retry",
- "tokio-util 0.7.4",
+ "tokio-util",
  "url",
 ]
 
 [[package]]
 name = "ticketland-crypto"
 version = "0.1.15"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+source = "git+https://github.com/ticketland-io/common-rust#e7b3880dea179d91118d6639c8573a5289e887bf"
 dependencies = [
  "base64 0.13.1",
  "bs58",
@@ -6048,9 +6062,10 @@ dependencies = [
 
 [[package]]
 name = "ticketland-data"
-version = "0.1.31"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+version = "0.1.34"
+source = "git+https://github.com/ticketland-io/common-rust#e7b3880dea179d91118d6639c8573a5289e887bf"
 dependencies = [
+ "bigdecimal",
  "chrono",
  "diesel",
  "diesel-async",
@@ -6063,8 +6078,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.19"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#1ffeb68ff71de445ded275e534655afdd85cd358"
+version = "0.1.20"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#68266aa91d514de10ab714e86bffef8cd885aaab"
 dependencies = [
  "actix",
  "actix-rt",
@@ -6088,7 +6103,7 @@ dependencies = [
  "ticketland-data",
  "tokio",
  "tokio-stream",
- "tokio-util 0.7.4",
+ "tokio-util",
  "tracing-subscriber",
  "webbundle",
 ]
@@ -6096,7 +6111,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#4b49acefdd0526c323fab39a8618cde2539dc35e"
+source = "git+https://github.com/ticketland-io/common-rust#e7b3880dea179d91118d6639c8573a5289e887bf"
 dependencies = [
  "lazy_static",
 ]
@@ -6175,9 +6190,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.23.0"
+version = "1.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eab6d665857cc6ca78d6e80303a02cea7a7851e85dfbd77cbdc09bd129f1ef46"
+checksum = "38a54aca0c15d014013256222ba0ebed095673f89345dd79119d912eb561b7a8"
 dependencies = [
  "autocfg",
  "bytes",
@@ -6246,7 +6261,7 @@ dependencies = [
  "postgres-types",
  "socket2",
  "tokio",
- "tokio-util 0.7.4",
+ "tokio-util",
 ]
 
 [[package]]
@@ -6310,20 +6325,6 @@ dependencies = [
  "tungstenite",
  "webpki",
  "webpki-roots",
-]
-
-[[package]]
-name = "tokio-util"
-version = "0.6.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36943ee01a6d67977dd3f84a5a1d2efeb4ada3a1ae771cadfaa535d9d9fc6507"
-dependencies = [
- "bytes",
- "futures-core",
- "futures-sink",
- "log",
- "pin-project-lite",
- "tokio",
 ]
 
 [[package]]
@@ -6570,12 +6571,6 @@ dependencies = [
  "generic-array",
  "subtle",
 ]
-
-[[package]]
-name = "unsigned-varint"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7fdeedbf205afadfe39ae559b75c3240f24e257d0ca27e85f85cb82aa19ac35"
 
 [[package]]
 name = "unsigned-varint"

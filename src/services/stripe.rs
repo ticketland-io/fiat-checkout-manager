@@ -163,7 +163,7 @@ pub async fn create_payment(
       let stripe_account = postgres.read_stripe_account(buyer_uid.clone()).await?;
       let stripe_customer = StripeCustomer {
         customer_uid: customer.id.to_string(),
-        created_at: customer.created.map(|secs| NaiveDateTime::from_timestamp(secs, 0)),
+        created_at: customer.created.map_or(None, |secs| NaiveDateTime::from_timestamp_opt(secs, 0)),
         stripe_uid: stripe_account.stripe_uid,
       };
 
