@@ -149,7 +149,7 @@ pub async fn create_payment(
   let mut postgres = store.pg_pool.connection().await?;
   let account = postgres.read_account_by_id(buyer_uid.clone()).await?;
 
-  let customer = match postgres.read_customer_by_account_id(buyer_uid.clone()).await {
+  let customer = match postgres.read_stripe_customer(buyer_uid.clone()).await {
     Ok(customer) => customer,
     Err(_) => {
       let descr = buyer_uid.clone();
@@ -160,11 +160,10 @@ pub async fn create_payment(
       };
 
       let customer = Customer::create(&client, customer).await?;
-      let stripe_account = postgres.read_stripe_account(buyer_uid.clone()).await?;
       let stripe_customer = StripeCustomer {
+        account_id: buyer_uid.clone(),
         customer_uid: customer.id.to_string(),
         created_at: customer.created.map_or(None, |secs| NaiveDateTime::from_timestamp_opt(secs, 0)),
-        stripe_uid: stripe_account.stripe_uid,
       };
 
       postgres.upsert_stripe_customer(stripe_customer.clone()).await?;
@@ -185,6 +184,8 @@ pub async fn create_payment(
     });
     params.receipt_email = account.email.as_ref().map(String::as_str);
     params.metadata = payment_metadata;
+
+    println!("params {:?}", params);
 
     timeout(
       Duration::seconds(2).num_milliseconds() as u64,
