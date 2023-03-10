@@ -431,8 +431,8 @@ checksum = "2cb2f989d18dd141ab8ae82f64d1a8cdd37e0840f73a406896cf5e99502fab61"
 
 [[package]]
 name = "api-helpers"
-version = "0.3.23"
-source = "git+https://github.com/ticketland-io/common-rust#9bc14a27e313f8ac46afe5be7d61d7088477092c"
+version = "0.3.24"
+source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
 dependencies = [
  "actix",
  "actix-http",
@@ -5943,7 +5943,7 @@ dependencies = [
 [[package]]
 name = "ticket-verification"
 version = "0.1.16"
-source = "git+https://github.com/ticketland-io/common-rust#9bc14a27e313f8ac46afe5be7d61d7088477092c"
+source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
 dependencies = [
  "borsh",
  "bs58",
@@ -5975,7 +5975,7 @@ dependencies = [
 [[package]]
 name = "ticketland-api"
 version = "0.1.5"
-source = "git+https://github.com/ticketland-io/ticketland-api?branch=feat/multiple-ticket-images#b4dc74da8ac21f3a1b7ed23a4f2764e1bc2cdf76"
+source = "git+https://github.com/ticketland-io/ticketland-api#43cc3b4d2d631511447b4af4ae852673b97deda6"
 dependencies = [
  "actix",
  "actix-cors",
@@ -6013,7 +6013,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.2.18"
-source = "git+https://github.com/ticketland-io/common-rust#9bc14a27e313f8ac46afe5be7d61d7088477092c"
+source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -6045,7 +6045,7 @@ dependencies = [
 [[package]]
 name = "ticketland-crypto"
 version = "0.1.15"
-source = "git+https://github.com/ticketland-io/common-rust#9bc14a27e313f8ac46afe5be7d61d7088477092c"
+source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
 dependencies = [
  "base64 0.13.1",
  "bs58",
@@ -6062,8 +6062,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-data"
-version = "0.1.40"
-source = "git+https://github.com/ticketland-io/common-rust#9bc14a27e313f8ac46afe5be7d61d7088477092c"
+version = "0.1.42"
+source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -6079,7 +6079,7 @@ dependencies = [
 [[package]]
 name = "ticketland-event-handler"
 version = "0.1.22"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler?branch=feat/multiple-ticket-images#32afa28e02f3b450825714342d1ccd48852d2218"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#67e326a8a50fcdf662ae26ab376bf8a455df1746"
 dependencies = [
  "actix",
  "actix-rt",
@@ -6111,7 +6111,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#9bc14a27e313f8ac46afe5be7d61d7088477092c"
+source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
 dependencies = [
  "lazy_static",
 ]
