@@ -15,6 +15,7 @@ impl PaymentProducer {
       &"payment_created",
       &"payment_created.new",
       retry_ttl,
+      None,
     ).await.unwrap();
 
     Self {
