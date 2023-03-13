@@ -19,13 +19,21 @@ use super::price_feed::get_sol_price;
 // 1 unit in Stripe is 100
 const STRIPE_UNIT: i64 = 100;
 
+// 1 USDC unit is 1000000
+const USDC_UNIT: i64 = 1000000;
+
 /// This is the amount in SOL needed to send a transaction that will mint a new ticket NFT
 /// TODO: use the correct value here
 const MINT_TICKER_COST_IN_SOL: i64 = 7; // this is 0.007 SOL
 const FILL_SELL_LISTING_COST_IN_SOL: i64 = 5; // this is 0.006 SOL
 
-fn to_stripe_unit(val: i64) -> i64 {
-  val * STRIPE_UNIT
+// TODO: We consider that all prices are stored with 6 decimals.
+// Thus we need to remove 6 decimals from the DB value. This would need
+// to be more dynamic in the future. The decimals will be stored in the DB
+// record as well
+// Note: we first multiply with STRIPE_UNIT to allow for decimals
+fn from_usdc_to_stripe_unit(val: i64) -> i64 {
+  val * STRIPE_UNIT / USDC_UNIT
 }
 
 pub async fn calculate_price_and_fees(
@@ -34,11 +42,7 @@ pub async fn calculate_price_and_fees(
   protocol_fee_perc: i64,
   mint_cost: i64
 ) -> Result<(i64, i64)> {
-  // TODO: We consider that all prices are stored with 6 decimals.
-  // Thus we need to remove 6 decimals from the DB value. This would need
-  // to be more dynamic in the future. The decimals will be stored in the DB
-  // record as well
-  let ticket_price = to_stripe_unit(ticket_price / 1000000);
+  let ticket_price = from_usdc_to_stripe_unit(ticket_price);
   let protocol_fee = (ticket_price * protocol_fee_perc) / 10_000;
   let sol_price = get_sol_price(store).await?;
   let mint_cost = (mint_cost * sol_price) / 1000;

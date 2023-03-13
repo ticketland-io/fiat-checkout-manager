@@ -1,6 +1,6 @@
 [package]
 name = "fiat-checkout-manager"
-version = "0.1.11"
+version = "0.1.12"
 edition = "2021"
 license = "BUSL-1.1"
 
@@ -22,6 +22,8 @@ ticketland-data = { git = "https://github.com/ticketland-io/common-rust", versio
 ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.1.22" }
 program-artifacts = { git = "https://github.com/ticketland-io/program-artifacts", version = "0.1.29" }
 price-feed = { git = "https://github.com/ticketland-io/price-feed", version = "0.1.2" }
+# ticketland-api = {path = '../ticketland-api/src/api'}
+# ticketland-event-handler = {path = '../ticketland-event-handler'}
 solana-web3-rust = { git = "https://github.com/ticketland-io/solana-web3-rust", version = "0.1.10" }
 tokio = { version = "1.14.1" }
 lapin = "2.1.1"
