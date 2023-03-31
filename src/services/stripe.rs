@@ -178,7 +178,6 @@ pub async fn create_payment(
     let mut params = CreatePaymentIntent::new(price, Currency::USD);
     params.customer = CustomerId::from_str(&customer.customer_uid).ok();
     params.application_fee_amount = Some(fee);
-    params.on_behalf_of = Some(&stripe_account.stripe_uid);
     params.transfer_data = Some(CreatePaymentIntentTransferData {
       destination: stripe_account.stripe_uid.clone(),
       ..Default::default()
