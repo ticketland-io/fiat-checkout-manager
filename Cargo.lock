@@ -282,6 +282,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "aead"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c192eb8f11fc081b0fe4259ba5af04217d4e0faddd02417310a927911abd7c8"
+dependencies = [
+ "crypto-common",
+ "generic-array",
+]
+
+[[package]]
 name = "aes"
 version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -294,16 +304,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "aes"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "433cfd6710c9986c576a25ca913c39d66a6474107b406f34f91d4a8923395241"
+dependencies = [
+ "cfg-if",
+ "cipher 0.4.3",
+ "cpufeatures",
+]
+
+[[package]]
 name = "aes-gcm-siv"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589c637f0e68c877bbd59a4599bbe849cac8e5f3e4b5a3ebae8f528cd218dcdc"
 dependencies = [
- "aead",
- "aes",
+ "aead 0.4.3",
+ "aes 0.7.5",
  "cipher 0.3.0",
- "ctr",
- "polyval",
+ "ctr 0.8.0",
+ "polyval 0.5.3",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
+name = "aes-gcm-siv"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae0784134ba9375416d469ec31e7c5f9fa94405049cf08c5ce5b4698be673e0d"
+dependencies = [
+ "aead 0.5.1",
+ "aes 0.8.2",
+ "cipher 0.4.3",
+ "ctr 0.9.2",
+ "polyval 0.6.0",
  "subtle",
  "zeroize",
 ]
@@ -431,8 +467,8 @@ checksum = "2cb2f989d18dd141ab8ae82f64d1a8cdd37e0840f73a406896cf5e99502fab61"
 
 [[package]]
 name = "api-helpers"
-version = "0.3.24"
-source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
+version = "0.3.25"
+source = "git+https://github.com/ticketland-io/common-rust#eb214d9bc98d166c9c6e6e59acd73088120c9d9b"
 dependencies = [
  "actix",
  "actix-http",
@@ -1775,6 +1811,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1bfb12502f3fc46cca1bb51ac28df9d618d813cdc3d2f25b9fe775a34af26bb3"
 dependencies = [
  "generic-array",
+ "rand_core 0.6.4",
  "typenum",
 ]
 
@@ -1805,6 +1842,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "049bb91fb4aaf0e3c7efa6cd5ef877dbbbd15b39dad06d9948de4ec8a75761ea"
 dependencies = [
  "cipher 0.3.0",
+]
+
+[[package]]
+name = "ctr"
+version = "0.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0369ee1ad671834580515889b80f2ea915f23b8be8d0daa4bbaf2ac5c7590835"
+dependencies = [
+ "cipher 0.4.3",
 ]
 
 [[package]]
@@ -2312,7 +2358,7 @@ checksum = "835a3dc7d1ec9e75e2b5fb4ba75396837112d2060b03f7d43bc1897c7f7211da"
 
 [[package]]
 name = "fiat-checkout-manager"
-version = "0.1.13"
+version = "0.1.14"
 dependencies = [
  "actix",
  "actix-rt",
@@ -3989,7 +4035,19 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "opaque-debug",
- "universal-hash",
+ "universal-hash 0.4.1",
+]
+
+[[package]]
+name = "polyval"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ef234e08c11dfcb2e56f79fd70f6f2eb7f025c0ce2333e82f4f0518ecad30c6"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "opaque-debug",
+ "universal-hash 0.5.0",
 ]
 
 [[package]]
@@ -4039,7 +4097,7 @@ dependencies = [
 [[package]]
 name = "price-feed"
 version = "0.1.2"
-source = "git+https://github.com/ticketland-io/price-feed#2d3d2fc0611cafb0596b7d946bbeb9c8126b4285"
+source = "git+https://github.com/ticketland-io/price-feed#12461cf7f7a976a8c9b9caec6fb6ce430559c68d"
 dependencies = [
  "actix",
  "actix-rt",
@@ -5667,7 +5725,7 @@ version = "1.14.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d81faf1b8f5c550923f01e9b2c41aec8f646cceff7fd72ca6712d10a4022f163"
 dependencies = [
- "aes-gcm-siv",
+ "aes-gcm-siv 0.10.3",
  "arrayref",
  "base64 0.13.1",
  "bincode",
@@ -5942,8 +6000,8 @@ dependencies = [
 
 [[package]]
 name = "ticket-verification"
-version = "0.1.16"
-source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
+version = "0.1.17"
+source = "git+https://github.com/ticketland-io/common-rust#eb214d9bc98d166c9c6e6e59acd73088120c9d9b"
 dependencies = [
  "borsh",
  "bs58",
@@ -5974,8 +6032,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-api"
-version = "0.1.5"
-source = "git+https://github.com/ticketland-io/ticketland-api#43cc3b4d2d631511447b4af4ae852673b97deda6"
+version = "0.1.6"
+source = "git+https://github.com/ticketland-io/ticketland-api#832a745627879e68d1ef0db097c20ed5974f63d4"
 dependencies = [
  "actix",
  "actix-cors",
@@ -6013,7 +6071,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.2.18"
-source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
+source = "git+https://github.com/ticketland-io/common-rust#eb214d9bc98d166c9c6e6e59acd73088120c9d9b"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -6044,9 +6102,10 @@ dependencies = [
 
 [[package]]
 name = "ticketland-crypto"
-version = "0.1.15"
-source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
+version = "0.1.19"
+source = "git+https://github.com/ticketland-io/common-rust#eb214d9bc98d166c9c6e6e59acd73088120c9d9b"
 dependencies = [
+ "aes-gcm-siv 0.11.1",
  "base64 0.13.1",
  "bs58",
  "ed25519-dalek",
@@ -6062,8 +6121,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-data"
-version = "0.1.42"
-source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
+version = "0.1.52"
+source = "git+https://github.com/ticketland-io/common-rust#eb214d9bc98d166c9c6e6e59acd73088120c9d9b"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -6078,8 +6137,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.22"
-source = "git+https://github.com/ticketland-io/ticketland-event-handler#67e326a8a50fcdf662ae26ab376bf8a455df1746"
+version = "0.1.24"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler#7de9ef00a945586339f564c5fbf7020e956d7cf1"
 dependencies = [
  "actix",
  "actix-rt",
@@ -6111,7 +6170,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#6de0946a983734c50bbb995f9722bdf7ede5afbb"
+source = "git+https://github.com/ticketland-io/common-rust#eb214d9bc98d166c9c6e6e59acd73088120c9d9b"
 dependencies = [
  "lazy_static",
 ]
@@ -6569,6 +6628,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f214e8f697e925001e66ec2c6e37a4ef93f0f78c2eed7814394e10c62025b05"
 dependencies = [
  "generic-array",
+ "subtle",
+]
+
+[[package]]
+name = "universal-hash"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d3160b73c9a19f7e2939a2fdad446c57c1bbbbf4d919d3213ff1267a580d8b5"
+dependencies = [
+ "crypto-common",
  "subtle",
 ]
 
