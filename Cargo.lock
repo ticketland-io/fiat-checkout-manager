@@ -430,6 +430,20 @@ dependencies = [
 [[package]]
 name = "amqp-helpers"
 version = "0.2.0"
+source = "git+https://github.com/ticketland-io/amqp-helpers?rev=7ec406e9d2037a7cefde38dae302502e66ad6432#7ec406e9d2037a7cefde38dae302502e66ad6432"
+dependencies = [
+ "async-trait",
+ "borsh",
+ "eyre",
+ "futures-lite",
+ "lapin",
+ "tokio-executor-trait",
+ "tokio-reactor-trait",
+]
+
+[[package]]
+name = "amqp-helpers"
+version = "0.2.0"
 source = "git+https://github.com/ticketland-io/amqp-helpers#7ec406e9d2037a7cefde38dae302502e66ad6432"
 dependencies = [
  "async-trait",
@@ -468,7 +482,7 @@ checksum = "2cb2f989d18dd141ab8ae82f64d1a8cdd37e0840f73a406896cf5e99502fab61"
 [[package]]
 name = "api-helpers"
 version = "0.3.26"
-source = "git+https://github.com/ticketland-io/common-rust#992cbff317fecd770d9ef76ee57d04c1ab8b28f9"
+source = "git+https://github.com/ticketland-io/common-rust#0ba21c12a607390263d146b8f6e4410e5d0728a4"
 dependencies = [
  "actix",
  "actix-http",
@@ -2362,7 +2376,7 @@ version = "0.1.14"
 dependencies = [
  "actix",
  "actix-rt",
- "amqp-helpers",
+ "amqp-helpers 0.2.0 (git+https://github.com/ticketland-io/amqp-helpers?rev=7ec406e9d2037a7cefde38dae302502e66ad6432)",
  "async-stripe",
  "async-trait",
  "borsh",
@@ -6001,7 +6015,7 @@ dependencies = [
 [[package]]
 name = "ticket-verification"
 version = "0.1.17"
-source = "git+https://github.com/ticketland-io/common-rust#992cbff317fecd770d9ef76ee57d04c1ab8b28f9"
+source = "git+https://github.com/ticketland-io/common-rust#0ba21c12a607390263d146b8f6e4410e5d0728a4"
 dependencies = [
  "borsh",
  "bs58",
@@ -6032,15 +6046,15 @@ dependencies = [
 
 [[package]]
 name = "ticketland-api"
-version = "0.1.6"
-source = "git+https://github.com/ticketland-io/ticketland-api#832a745627879e68d1ef0db097c20ed5974f63d4"
+version = "0.1.7"
+source = "git+https://github.com/ticketland-io/ticketland-api#8d57b2c4872f3b11a198f513659c6e15956d35e1"
 dependencies = [
  "actix",
  "actix-cors",
  "actix-multipart",
  "actix-rt",
  "actix-web",
- "amqp-helpers",
+ "amqp-helpers 0.2.0 (git+https://github.com/ticketland-io/amqp-helpers?rev=7ec406e9d2037a7cefde38dae302502e66ad6432)",
  "api-helpers",
  "async-stripe",
  "borsh",
@@ -6071,7 +6085,7 @@ dependencies = [
 [[package]]
 name = "ticketland-core"
 version = "0.2.19"
-source = "git+https://github.com/ticketland-io/common-rust#992cbff317fecd770d9ef76ee57d04c1ab8b28f9"
+source = "git+https://github.com/ticketland-io/common-rust#0ba21c12a607390263d146b8f6e4410e5d0728a4"
 dependencies = [
  "actix",
  "actix-multipart",
@@ -6103,7 +6117,7 @@ dependencies = [
 [[package]]
 name = "ticketland-crypto"
 version = "0.1.19"
-source = "git+https://github.com/ticketland-io/common-rust#992cbff317fecd770d9ef76ee57d04c1ab8b28f9"
+source = "git+https://github.com/ticketland-io/common-rust#0ba21c12a607390263d146b8f6e4410e5d0728a4"
 dependencies = [
  "aes-gcm-siv 0.11.1",
  "base64 0.13.1",
@@ -6121,8 +6135,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-data"
-version = "0.1.54"
-source = "git+https://github.com/ticketland-io/common-rust#992cbff317fecd770d9ef76ee57d04c1ab8b28f9"
+version = "0.1.55"
+source = "git+https://github.com/ticketland-io/common-rust#0ba21c12a607390263d146b8f6e4410e5d0728a4"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -6142,7 +6156,7 @@ source = "git+https://github.com/ticketland-io/ticketland-event-handler#7de9ef00
 dependencies = [
  "actix",
  "actix-rt",
- "amqp-helpers",
+ "amqp-helpers 0.2.0 (git+https://github.com/ticketland-io/amqp-helpers)",
  "async-trait",
  "borsh",
  "bytes",
@@ -6170,7 +6184,7 @@ dependencies = [
 [[package]]
 name = "ticketland-utils"
 version = "0.2.3"
-source = "git+https://github.com/ticketland-io/common-rust#992cbff317fecd770d9ef76ee57d04c1ab8b28f9"
+source = "git+https://github.com/ticketland-io/common-rust#0ba21c12a607390263d146b8f6e4410e5d0728a4"
 dependencies = [
  "lazy_static",
 ]

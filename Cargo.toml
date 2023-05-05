@@ -15,10 +15,10 @@ borsh = "0.9.3"
 chrono = "0.4.21"
 dotenv = "0.15"
 eyre = "0.6.8"
-ticketland-api = { git = "https://github.com/ticketland-io/ticketland-api", version = "0.1.6"  }
-amqp-helpers = { git = "https://github.com/ticketland-io/amqp-helpers", version = "0.2.0" }
+ticketland-api = { git = "https://github.com/ticketland-io/ticketland-api", version = "0.1.7"  }
+amqp-helpers = { git = "https://github.com/ticketland-io/amqp-helpers", version = "0.2.0", rev = "7ec406e9d2037a7cefde38dae302502e66ad6432" }
 ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.19"  }
-ticketland-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.51" }
+ticketland-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.55" }
 ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.1.24" }
 program-artifacts = { git = "https://github.com/ticketland-io/program-artifacts", version = "0.1.29" }
 price-feed = { git = "https://github.com/ticketland-io/price-feed", version = "0.1.2" }
