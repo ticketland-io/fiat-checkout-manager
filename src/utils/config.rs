@@ -5,7 +5,7 @@ use solana_web3_rust::utils::pubkey_from_str;
 pub struct Config {
   pub postgres_uri: String,
   pub rabbitmq_uri: String,
-  pub retry_ttl: u16,
+  pub retry_ttl: u32,
   pub redis_host: String,
   pub redis_port: u16,
   pub redis_password: String,
@@ -38,7 +38,7 @@ impl Config {
         ticket_nft_state: pubkey_from_str(&env::var("TICKET_NFT_STATE").unwrap()).unwrap(),
         secondary_market_protocol_fee: env::var("SECONDARY_MARKET_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
         operator_priv_key: env::var("OPERATOR_PRIV_KEY").unwrap(),
-        retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u16>().unwrap(),
+        retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u32>().unwrap(),
       }
     )
   }

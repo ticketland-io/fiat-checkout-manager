@@ -258,7 +258,7 @@ impl CreatePaymentHandler {
 
 #[async_trait]
 impl Handler<CreatePayment> for CreatePaymentHandler {
-  async fn handle(&self, msg: CreatePayment, _: &Delivery, _: i64,) -> Result<()> {
+  async fn handle(&mut self, msg: CreatePayment, _: &Delivery, _: i64,) -> Result<()> {
     let (ws_session_id, payment_secret) = match msg {
       CreatePayment::Primary {..} => {
         let (ws_session_id, buyer_uid, _, event_id, ticket_type_index, _,) = msg.primary();

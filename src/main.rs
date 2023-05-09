@@ -29,12 +29,13 @@ fn main() {
   let execution = async {
     let store = Arc::new(Store::new().await);
 
-    let mut role_handler_consumer = ConsumerRunner::new(
+    let role_handler_consumer = ConsumerRunner::new(
       store.config.rabbitmq_uri.clone(),
       "create_payment".to_owned(),
       "create_payment".to_owned(),
-      Arc::new(CreatePaymentHandler::new(store)),
-    ).await;
+      1,
+      CreatePaymentHandler::new(store),
+    ).await.unwrap();
 
     role_handler_consumer.start().await.unwrap();
   };
