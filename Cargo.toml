@@ -15,11 +15,11 @@ borsh = "0.9.3"
 chrono = "0.4.21"
 dotenv = "0.15"
 eyre = "0.6.8"
-ticketland-api = { git = "https://github.com/ticketland-io/ticketland-api", version = "0.2.0"  }
+ticketland-api = { git = "https://github.com/ticketland-io/ticketland-api", branch = "feat/sui", version = "0.2.0"  }
 amqp-helpers = { git = "https://github.com/ticketland-io/amqp-helpers", version = "0.4.3" }
 ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.3.0" }
 ticketland-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.0" }
-ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.2.0" }
+ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", branch = "feat/sui", version = "0.2.0" }
 price-feed = { git = "https://github.com/ticketland-io/price-feed", version = "0.1.3" }
 tokio = { version = "1.14.1" }
 lapin = "2.1.1"
