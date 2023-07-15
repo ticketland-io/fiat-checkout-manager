@@ -109,7 +109,10 @@ pub async fn create_payment(
   // There are 5 async calls in this function. Each call will have a time out attached. The total timout is 13 seconds thus
   // this lock will be valid until all calls have successfully processed or until one has a timeout at which point no link is
   // returned to the user and thus the Scenario #3 we describe in the technical documentation will not pose an issue.
-  let lock = store.redlock.lock(seat_index.to_string().as_bytes(), Duration::seconds(15).num_milliseconds() as usize).await?;
+  let lock = store.redlock.lock(
+    format!("{}:{}", event_id, seat_index).as_bytes(),
+    Duration::seconds(15).num_milliseconds() as usize
+  ).await?;
   
   // Check if the ticket_nft key is in Redis; If so then the ticket is not available
   // This can happen when someone tries to create a payment session straigth after someone else
