@@ -1,6 +1,6 @@
 [package]
 name = "fiat-checkout-manager"
-version = "0.1.14"
+version = "0.2.0"
 edition = "2021"
 license = "BUSL-1.1"
 
@@ -15,17 +15,12 @@ borsh = "0.9.3"
 chrono = "0.4.21"
 dotenv = "0.15"
 eyre = "0.6.8"
-# ticketland-api = { git = "https://github.com/ticketland-io/ticketland-api", version = "0.1.7"  }
-ticketland-api = {path = '../ticketland-api/src/api'}
+ticketland-api = { git = "https://github.com/ticketland-io/ticketland-api", version = "0.2.0"  }
 amqp-helpers = { git = "https://github.com/ticketland-io/amqp-helpers", version = "0.4.3" }
-# ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.19" }
-ticketland-core = { path = "../common-rust/src/ticketland-core" }
-# ticketland-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.1.55" }
-ticketland-data = { path = "../common-rust/src/ticketland-data" }
-# ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version="0.1.26" }
-ticketland-event-handler = {path = '../ticketland-event-handler'}
-price-feed = { git = "https://github.com/ticketland-io/price-feed", version = "0.1.2" }
-# solana-web3-rust = { git = "https://github.com/ticketland-io/solana-web3-rust", version = "0.1.10" }
+ticketland-core = { git = "https://github.com/ticketland-io/common-rust", version = "0.3.0" }
+ticketland-data = { git = "https://github.com/ticketland-io/common-rust", version = "0.2.0" }
+ticketland-event-handler = { git = "https://github.com/ticketland-io/ticketland-event-handler", version = "0.2.0" }
+price-feed = { git = "https://github.com/ticketland-io/price-feed", version = "0.1.3" }
 tokio = { version = "1.14.1" }
 lapin = "2.1.1"
 tracing = "0.1.19"
