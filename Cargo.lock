@@ -9239,6 +9239,7 @@ dependencies = [
 [[package]]
 name = "price-feed"
 version = "0.1.3"
+source = "git+https://github.com/ticketland-io/price-feed#47932fe961758239a7b18b9e5578ae940eed6475"
 dependencies = [
  "actix",
  "actix-rt",
@@ -12706,6 +12707,7 @@ dependencies = [
 [[package]]
 name = "ticketland-api"
 version = "0.2.0"
+source = "git+https://github.com/ticketland-io/ticketland-api?branch=feat/sui#851ca90818c4b34af021217faed786cc91392eff"
 dependencies = [
  "actix",
  "actix-cors",
@@ -12810,7 +12812,8 @@ dependencies = [
 
 [[package]]
 name = "ticketland-event-handler"
-version = "0.1.26"
+version = "0.2.0"
+source = "git+https://github.com/ticketland-io/ticketland-event-handler?branch=feat/sui#725537892e49457a0ab74f700a669e80e22000d8"
 dependencies = [
  "actix",
  "actix-rt",
