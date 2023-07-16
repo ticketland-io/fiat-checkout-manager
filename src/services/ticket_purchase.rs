@@ -3,7 +3,7 @@ use eyre::{Result, Report};
 use ticketland_data::models::ticket_type::SaleType;
 use crate::utils::store::Store;
 
-use super::price_feed::get_sol_price;
+use super::price_feed::get_sui_price;
 
 // 1 unit in Stripe is 100
 const STRIPE_UNIT: i64 = 100;
@@ -33,7 +33,7 @@ pub async fn calculate_price_and_fees(
 ) -> Result<(i64, i64)> {
   let ticket_price = from_usdc_to_stripe_unit(ticket_price);
   let protocol_fee = (ticket_price * protocol_fee_perc) / 10_000;
-  let sol_price = get_sol_price(store).await?;
+  let sol_price = get_sui_price(store).await?;
   let mint_cost = (mint_cost * sol_price) / 1000;
   let total_fees = protocol_fee + mint_cost;
 

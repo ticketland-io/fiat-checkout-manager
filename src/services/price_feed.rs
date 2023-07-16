@@ -6,9 +6,9 @@ use crate::utils::store::Store;
 // 1 unit in Stripe is 100
 const STRIPE_UNIT: f64 = 100.0;
 
-pub async fn get_sol_price(store: Arc<Store>,) -> Result<i64> {
+pub async fn get_sui_price(store: Arc<Store>,) -> Result<i64> {
   let mut redis = store.redis_pool.connection().await?;
-  let price = redis.get(&get_price_key("solana"))
+  let price = redis.get(&get_price_key("sui"))
   .await?
   .parse::<f64>()?;
 
