@@ -12,7 +12,6 @@ pub struct Config {
   pub stripe_key: String,
   pub ticket_purchase_protocol_fee: i64,
   pub secondary_market_protocol_fee: i64,
-  pub operator_priv_key: String,
 }
 
 impl Config {
@@ -29,7 +28,6 @@ impl Config {
         stripe_key: env::var("STRIPE_CLIENT_SECRET").unwrap(),
         ticket_purchase_protocol_fee: env::var("TICKET_PURCHASE_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
         secondary_market_protocol_fee: env::var("SECONDARY_MARKET_PROTOCOL_FEE").unwrap().parse::<i64>().unwrap(),
-        operator_priv_key: env::var("OPERATOR_PRIV_KEY").unwrap(),
         retry_ttl: env::var("RETRY_TTL").unwrap().parse::<u32>().unwrap(),
       }
     )
