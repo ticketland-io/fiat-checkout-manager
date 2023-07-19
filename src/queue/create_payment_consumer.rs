@@ -40,7 +40,6 @@ impl CreatePaymentHandler {
   }
 
   async fn create_primary_payment(&self, msg: &CreatePayment, seat_index: u32, seat_name: String) -> Result<String> {
-    // let (_, buyer_uid, event_id, ticket_type_index, recipient, txb_bytes, signature) = msg.primary();
     let (_, buyer_uid, event_id, ticket_type_index, recipient) = msg.primary();
 
     Ok(
@@ -52,8 +51,6 @@ impl CreatePaymentHandler {
         recipient.to_string(),
         seat_index,
         seat_name,
-        // txb_bytes.to_string(),
-        // signature.to_string(),
       ).await?
     )
   }
