@@ -1,4 +1,8 @@
-FROM rust:1.65 as builder
+FROM rust:1.71 as builder
+
+RUN apt-get update \
+    && apt-get install -y clang \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG GITHUB_TOKEN
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
@@ -13,7 +17,7 @@ RUN cargo build --release
 RUN git config --global --unset url."https://${GITHUB_TOKEN}@github.com/".insteadOf
 
 
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 ARG APP=/usr/src/app
 
 EXPOSE 8000
